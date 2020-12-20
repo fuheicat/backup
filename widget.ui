@@ -1,20 +1,784 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>Widget</class>
- <widget class="QWidget" name="Widget" >
-  <property name="geometry" >
+ <widget class="QWidget" name="Widget">
+  <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>768</width>
+    <height>768</height>
    </rect>
   </property>
-  <property name="windowTitle" >
-   <string>Widget</string>
+  <property name="windowTitle">
+   <string>文件备份系统</string>
   </property>
+  <property name="windowIcon">
+   <iconset resource="image.qrc">
+    <normaloff>:/image/image/icon.png</normaloff>:/image/image/icon.png</iconset>
+  </property>
+  <widget class="QTabWidget" name="tabWidget">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>768</width>
+     <height>768</height>
+    </rect>
+   </property>
+   <property name="tabShape">
+    <enum>QTabWidget::Triangular</enum>
+   </property>
+   <property name="currentIndex">
+    <number>1</number>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>24</width>
+     <height>24</height>
+    </size>
+   </property>
+   <property name="movable">
+    <bool>true</bool>
+   </property>
+   <widget class="QWidget" name="tab">
+    <attribute name="icon">
+     <iconset resource="image.qrc">
+      <normaloff>:/image/image/backup.png</normaloff>:/image/image/backup.png</iconset>
+    </attribute>
+    <attribute name="title">
+     <string>备份</string>
+    </attribute>
+    <widget class="QLabel" name="label">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>5</y>
+       <width>111</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="autoFillBackground">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string>待备份文件列表</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QTreeWidget" name="backupFileList">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>30</y>
+       <width>746</width>
+       <height>481</height>
+      </rect>
+     </property>
+     <property name="acceptDrops">
+      <bool>true</bool>
+     </property>
+     <property name="dragDropMode">
+      <enum>QAbstractItemView::NoDragDrop</enum>
+     </property>
+     <attribute name="headerHighlightSections">
+      <bool>false</bool>
+     </attribute>
+     <attribute name="headerShowSortIndicator" stdset="0">
+      <bool>false</bool>
+     </attribute>
+     <column>
+      <property name="text">
+       <string>文件名</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>完整路径</string>
+      </property>
+     </column>
+    </widget>
+    <widget class="QLabel" name="label_2">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>550</y>
+       <width>72</width>
+       <height>15</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>选项</string>
+     </property>
+    </widget>
+    <widget class="QToolButton" name="addFileButton">
+     <property name="geometry">
+      <rect>
+       <x>369</x>
+       <y>521</y>
+       <width>101</width>
+       <height>26</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>添加文件</string>
+     </property>
+     <property name="icon">
+      <iconset resource="image.qrc">
+       <normaloff>:/image/image/add.png</normaloff>:/image/image/add.png</iconset>
+     </property>
+     <property name="toolButtonStyle">
+      <enum>Qt::ToolButtonTextBesideIcon</enum>
+     </property>
+    </widget>
+    <widget class="QToolButton" name="deleteFileButton">
+     <property name="geometry">
+      <rect>
+       <x>597</x>
+       <y>521</y>
+       <width>71</width>
+       <height>26</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>删除</string>
+     </property>
+     <property name="icon">
+      <iconset resource="image.qrc">
+       <normaloff>:/image/image/delete.png</normaloff>:/image/image/delete.png</iconset>
+     </property>
+     <property name="toolButtonStyle">
+      <enum>Qt::ToolButtonTextBesideIcon</enum>
+     </property>
+    </widget>
+    <widget class="QToolButton" name="clearFileButton">
+     <property name="geometry">
+      <rect>
+       <x>681</x>
+       <y>521</y>
+       <width>71</width>
+       <height>26</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>清空</string>
+     </property>
+     <property name="icon">
+      <iconset resource="image.qrc">
+       <normaloff>:/image/image/clear.png</normaloff>:/image/image/clear.png</iconset>
+     </property>
+     <property name="toolButtonStyle">
+      <enum>Qt::ToolButtonTextBesideIcon</enum>
+     </property>
+    </widget>
+    <widget class="Line" name="line">
+     <property name="geometry">
+      <rect>
+       <x>50</x>
+       <y>552</y>
+       <width>707</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+    <widget class="Line" name="line_2">
+     <property name="geometry">
+      <rect>
+       <x>749</x>
+       <y>560</y>
+       <width>16</width>
+       <height>171</height>
+      </rect>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+    </widget>
+    <widget class="Line" name="line_3">
+     <property name="geometry">
+      <rect>
+       <x>14</x>
+       <y>722</y>
+       <width>743</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+    <widget class="Line" name="line_4">
+     <property name="geometry">
+      <rect>
+       <x>5</x>
+       <y>570</y>
+       <width>16</width>
+       <height>161</height>
+      </rect>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_5">
+     <property name="geometry">
+      <rect>
+       <x>30</x>
+       <y>581</y>
+       <width>81</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>备份文件名</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="backupFilenameLineEdit">
+     <property name="geometry">
+      <rect>
+       <x>120</x>
+       <y>580</y>
+       <width>571</width>
+       <height>21</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_6">
+     <property name="geometry">
+      <rect>
+       <x>60</x>
+       <y>611</y>
+       <width>51</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>备份到</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="backupFileDictoryLineEdit">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>120</x>
+       <y>610</y>
+       <width>571</width>
+       <height>21</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QToolButton" name="browseButton">
+     <property name="geometry">
+      <rect>
+       <x>700</x>
+       <y>610</y>
+       <width>47</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>...</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_11">
+     <property name="geometry">
+      <rect>
+       <x>45</x>
+       <y>641</y>
+       <width>61</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>定时备份</string>
+     </property>
+    </widget>
+    <widget class="QRadioButton" name="noneRadioButton">
+     <property name="geometry">
+      <rect>
+       <x>120</x>
+       <y>642</y>
+       <width>115</width>
+       <height>19</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>不定时</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QRadioButton" name="everydayRadioButton">
+     <property name="geometry">
+      <rect>
+       <x>250</x>
+       <y>642</y>
+       <width>115</width>
+       <height>19</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>每天</string>
+     </property>
+     <property name="checked">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QRadioButton" name="everyweekRadioButton">
+     <property name="geometry">
+      <rect>
+       <x>380</x>
+       <y>642</y>
+       <width>115</width>
+       <height>19</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>每周</string>
+     </property>
+     <property name="checked">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QCheckBox" name="passwordCheckBox">
+     <property name="geometry">
+      <rect>
+       <x>53</x>
+       <y>671</y>
+       <width>61</width>
+       <height>19</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>密码</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="passwordLineEdit">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>120</x>
+       <y>671</y>
+       <width>571</width>
+       <height>21</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QCheckBox" name="cloudCheckBox">
+     <property name="geometry">
+      <rect>
+       <x>53</x>
+       <y>701</y>
+       <width>101</width>
+       <height>19</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>上传到云端</string>
+     </property>
+    </widget>
+    <widget class="QToolButton" name="startBackupButton">
+     <property name="geometry">
+      <rect>
+       <x>700</x>
+       <y>640</y>
+       <width>47</width>
+       <height>81</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>开始
+备份</string>
+     </property>
+     <property name="icon">
+      <iconset resource="image.qrc">
+       <normaloff>:/image/image/start.png</normaloff>:/image/image/start.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>24</width>
+       <height>24</height>
+      </size>
+     </property>
+     <property name="toolButtonStyle">
+      <enum>Qt::ToolButtonTextUnderIcon</enum>
+     </property>
+    </widget>
+    <widget class="QToolButton" name="addDictoryButton">
+     <property name="geometry">
+      <rect>
+       <x>483</x>
+       <y>521</y>
+       <width>101</width>
+       <height>26</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>添加目录</string>
+     </property>
+     <property name="icon">
+      <iconset resource="image.qrc">
+       <normaloff>:/image/image/add.png</normaloff>:/image/image/add.png</iconset>
+     </property>
+     <property name="toolButtonStyle">
+      <enum>Qt::ToolButtonTextBesideIcon</enum>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="tab_2">
+    <attribute name="icon">
+     <iconset resource="image.qrc">
+      <normaloff>:/image/image/restore.png</normaloff>:/image/image/restore.png</iconset>
+    </attribute>
+    <attribute name="title">
+     <string>恢复</string>
+    </attribute>
+    <widget class="QGroupBox" name="localGroupBox">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>10</y>
+       <width>741</width>
+       <height>71</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>从本地文件恢复</string>
+     </property>
+     <property name="flat">
+      <bool>false</bool>
+     </property>
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
+     <widget class="QLabel" name="label_12">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>32</y>
+        <width>72</width>
+        <height>15</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>备份文件</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="localFileRestoreLineEdit">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>101</x>
+        <y>30</y>
+        <width>561</width>
+        <height>21</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QToolButton" name="browseLocalFile">
+      <property name="geometry">
+       <rect>
+        <x>670</x>
+        <y>30</y>
+        <width>47</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>...</string>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QGroupBox" name="cloudGroupBox">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>100</y>
+       <width>741</width>
+       <height>501</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>从云端恢复</string>
+     </property>
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
+     <property name="checked">
+      <bool>false</bool>
+     </property>
+     <widget class="QLabel" name="label_13">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>30</y>
+        <width>72</width>
+        <height>15</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>云端文件</string>
+      </property>
+     </widget>
+     <widget class="QTreeWidget" name="cloudFileList">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>60</y>
+        <width>701</width>
+        <height>381</height>
+       </rect>
+      </property>
+      <property name="contextMenuPolicy">
+       <enum>Qt::CustomContextMenu</enum>
+      </property>
+      <column>
+       <property name="text">
+        <string>文件名</string>
+       </property>
+      </column>
+     </widget>
+     <widget class="QLabel" name="label_14">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>19</x>
+        <y>462</y>
+        <width>72</width>
+        <height>15</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>备份文件</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="cloudFileRestoreLineEdit">
+      <property name="geometry">
+       <rect>
+        <x>100</x>
+        <y>460</y>
+        <width>621</width>
+        <height>21</height>
+       </rect>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QLineEdit" name="backupFileRestoreDictoryLineEdit">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>110</x>
+       <y>620</y>
+       <width>561</width>
+       <height>21</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QToolButton" name="browseRestoreDictoryButton">
+     <property name="geometry">
+      <rect>
+       <x>680</x>
+       <y>620</y>
+       <width>47</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>...</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_15">
+     <property name="geometry">
+      <rect>
+       <x>42</x>
+       <y>620</y>
+       <width>51</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>恢复到</string>
+     </property>
+    </widget>
+    <widget class="QCheckBox" name="passwordCheckBox_2">
+     <property name="geometry">
+      <rect>
+       <x>35</x>
+       <y>660</y>
+       <width>61</width>
+       <height>19</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>密码</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="passwordLineEdit_2">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>110</x>
+       <y>660</y>
+       <width>561</width>
+       <height>21</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="startRestoreButton">
+     <property name="geometry">
+      <rect>
+       <x>110</x>
+       <y>700</y>
+       <width>561</width>
+       <height>28</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>开始恢复</string>
+     </property>
+     <property name="icon">
+      <iconset resource="image.qrc">
+       <normaloff>:/image/image/start.png</normaloff>:/image/image/start.png</iconset>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="tab_3">
+    <attribute name="icon">
+     <iconset resource="image.qrc">
+      <normaloff>:/image/image/task.png</normaloff>:/image/image/task.png</iconset>
+    </attribute>
+    <attribute name="title">
+     <string>任务</string>
+    </attribute>
+    <widget class="QLabel" name="label_16">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>5</y>
+       <width>101</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>定时任务列表</string>
+     </property>
+    </widget>
+    <widget class="QTreeWidget" name="taskList">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>30</y>
+       <width>746</width>
+       <height>661</height>
+      </rect>
+     </property>
+     <property name="contextMenuPolicy">
+      <enum>Qt::CustomContextMenu</enum>
+     </property>
+     <property name="sortingEnabled">
+      <bool>false</bool>
+     </property>
+     <column>
+      <property name="text">
+       <string>备份文件名</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>下一次备份时间</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>备份频率</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>加密</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>上传到云端</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>完整路径</string>
+      </property>
+     </column>
+    </widget>
+    <widget class="QToolButton" name="clearTaskButton">
+     <property name="geometry">
+      <rect>
+       <x>684</x>
+       <y>700</y>
+       <width>71</width>
+       <height>26</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>清空</string>
+     </property>
+     <property name="icon">
+      <iconset resource="image.qrc">
+       <normaloff>:/image/image/clear.png</normaloff>:/image/image/clear.png</iconset>
+     </property>
+     <property name="toolButtonStyle">
+      <enum>Qt::ToolButtonTextBesideIcon</enum>
+     </property>
+    </widget>
+    <widget class="QToolButton" name="deleteTaskButton">
+     <property name="geometry">
+      <rect>
+       <x>600</x>
+       <y>700</y>
+       <width>71</width>
+       <height>26</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>删除</string>
+     </property>
+     <property name="icon">
+      <iconset resource="image.qrc">
+       <normaloff>:/image/image/delete.png</normaloff>:/image/image/delete.png</iconset>
+     </property>
+     <property name="toolButtonStyle">
+      <enum>Qt::ToolButtonTextBesideIcon</enum>
+     </property>
+    </widget>
+   </widget>
+  </widget>
  </widget>
- <layoutDefault spacing="6" margin="11" />
- <pixmapfunction></pixmapfunction>
- <resources/>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources>
+  <include location="image.qrc"/>
+ </resources>
  <connections/>
 </ui>
