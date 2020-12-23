@@ -30,11 +30,14 @@ Widget::Widget(QWidget *parent) : QWidget(parent), ui(new Ui::Widget) {
     connect(&timer, &QTimer::timeout, this, [=]() {
         if (taskManager.getTaskList().count()) {
             for (auto& task : taskManager.getTaskList()) {
-                if (task.nextTime.toString() == QDateTime::currentDateTime().toString()) {
+                // if (task.nextTime.toString() == QDateTime::currentDateTime().toString()) {
+                if (task.nextTime <= QDateTime::currentDateTime()) {
                     // 执行
                     // 更新下一次备份时间
                     int index = taskManager.getTaskList().indexOf(task);
-                    taskManager.updateTime(index, task.nextTime.addDays(task.frequency == 1 ? 1 : 7));
+                    while (task.nextTime <= QDateTime::currentDateTime()) {
+                        taskManager.updateTime(index, task.nextTime.addDays(task.frequency == 1 ? 1 : 7));
+                    }
                     ui->taskList->topLevelItem(index)->setText(1, task.nextTime.toString());
                     taskManager.writeJson();
                 }
