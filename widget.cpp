@@ -298,9 +298,7 @@ void Widget::on_deleteTaskButton_clicked() {
 }
 
 void Widget::on_clearTaskButton_clicked() {
-    while (ui->taskList->currentItem()) {
-        delete ui->taskList->currentItem();
-    }
+    ui->taskList->clear();
     taskManager.clear();
 }
 
