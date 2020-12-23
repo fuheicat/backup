@@ -268,7 +268,8 @@ void Widget::on_browseLocalFile_clicked() {
 }
 
 void Widget::on_cloudFileList_currentItemChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous) {
-    ui->cloudFileRestoreLineEdit->setText(current->text(0));
+    if (current)
+        ui->cloudFileRestoreLineEdit->setText(current->text(0));
 }
 
 void Widget::on_browseRestoreDictoryButton_clicked() {
