@@ -99,7 +99,7 @@ class Compressor {
         outFile.write((char*)&zeroUC, sizeof(zeroUC));
         /**写入压缩文件头部：密码**/
         if (!pw.empty()) {
-            string pwMD5 = getMD5(pw).c_str();
+            string pwMD5 = MD5().getMD5(pw).c_str();
             cout << "c:pwMD5=" << pwMD5 << endl;
             //outFile.write((char*)&pwMD5, 16);
             outFile << pwMD5;

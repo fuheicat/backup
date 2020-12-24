@@ -10,6 +10,8 @@
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #include "task.h"
+#include "compressor.h"
+#include "decompressor.h"
 
 const QString api = "http://127.0.0.1:5000/";
 

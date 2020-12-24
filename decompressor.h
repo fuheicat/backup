@@ -7,6 +7,7 @@
 #include <vector>
 #include <bitset>
 #include <cstring>
+#include <queue>
 #include "md5.h"
 
 #ifndef ull
@@ -76,7 +77,7 @@ class Decompressor {
             inFile.get(crMD5_c, 33);
             string crMD5 = string(crMD5_c, 32);
             //cout<<"d:crMD5="<<crMD5<<endl;
-            string pwMD5 = getMD5(pw);
+            string pwMD5 = MD5().getMD5(pw);
             //cout<<"d:pwMD5="<<pwMD5<<endl;
             if (crMD5 != pwMD5) {
                 inFile.close();
