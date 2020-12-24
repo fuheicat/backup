@@ -1,11 +1,13 @@
-#ifndef _DECOMPRESSOR_H
-#define _DECOMPRESSOR_H
+#ifndef DECOMPRESSOR_H_INCLUDED
+#define DECOMPRESSOR_H_INCLUDED
 
 #include <iostream>
 #include <fstream>
 #include <map>
 #include <vector>
 #include <bitset>
+#include <cstring>
+#include "md5.h"
 
 #ifndef ull
 #define ull unsigned long long
@@ -47,14 +49,6 @@ class Decompressor {
 			insert_node(father->right, uchar, code.substr(1));
 		}
 	}
-	/*void dfs(haffNode*pn,string code){
-	if(pn->left) dfs(pn->left,code+"0");
-	if(pn->right) dfs(pn->right,code+"1");
-	if(!(pn->left||pn->right)){
-	//cout<<int(pn->uchar)<<"  "<<code<<endl;
-	codeMap[pn->uchar]=code;
-	}
-	}*/
 public:
 	/** 返回值说明：
 	0：正常执行
@@ -63,15 +57,35 @@ public:
 	3：打开目标文件失败
 	4：文件过短，频率表不完整
 	5：文件结尾不完整
+	6：密码错误
 	**/
-	int decompress(string sourcePath, string destinationPath) {
+	int decompress(string sourcePath, string destinationPath, string pw="") {
+		/**打开源文件**/
 		if (sourcePath.substr(sourcePath.find_last_of(".") + 1) != "bak")
 			return 1; // 源文件扩展名不是bak
 		ifstream inFile;
 		inFile.open(sourcePath, ios::in | ios::binary);
 		if (!inFile)
 			return 2; // 打开源文件失败
-		ofstream outFile;
+		/**密码校验**/
+		unsigned char uchar;
+		inFile.read((char *)&uchar, sizeof(char));
+		int zeroNum = uchar;
+		if(zeroNum>=8){
+		    zeroNum-=8;
+		    char crMD5_c[33];
+            inFile.get(crMD5_c,33);
+            string crMD5=string(crMD5_c,32);
+            //cout<<"d:crMD5="<<crMD5<<endl;
+            string pwMD5=getMD5(pw);
+            //cout<<"d:pwMD5="<<pwMD5<<endl;
+            if(crMD5!=pwMD5){
+                inFile.close();
+                return 6; // 密码错误
+            }
+		}
+		/**打开目标文件**/
+        ofstream outFile;
 		string newFileName = destinationPath + sourcePath.substr(0, sourcePath.find_last_of(".")) + ".tar";
 		outFile.open(newFileName, ios::out | ios::binary);
 		if (!outFile) {
@@ -79,9 +93,6 @@ public:
 			return 3; // 打开目标文件失败
 		}
 		/**读出频率表**/
-		unsigned char uchar;
-		inFile.read((char *)&uchar, sizeof(char));
-		int zeroNum = uchar;
 		ull freq;
 		map<unsigned char, ull> freqMap;
 		int i = 0;
@@ -93,15 +104,7 @@ public:
 		}
 		if (i != 256)
 			return 4; // 文件过短，频率表不完整
-					  //dfs(root, "");
-					  /*for(int i=0;i<256;i++){
-					  unsigned char uc=i;
-					  string codeString="1"+codeMap[uc];
-					  short codeShort=string_to_short(codeString);
-					  cout<<i<<" "<<codeMap[uc]<<endl;
-					  outFile.write((char*)&codeShort, sizeof(codeShort));
-					  }*/
-					  /**建立词频小顶堆**/
+        /**建立词频小顶堆**/
 		priority_queue<haffNode*, vector<haffNode*>, cmp> freqHeap;
 		map<unsigned char, ull>::reverse_iterator it;
 		for (it = freqMap.rbegin(); it != freqMap.rend(); it++) {
@@ -170,4 +173,4 @@ public:
 		return 5; // 文件结尾不完整
 	}
 };
-#endif // _DECOMPRESSOR_H
+#endif // DECOMPRESSOR_H_INCLUDED

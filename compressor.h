@@ -1,5 +1,5 @@
-#ifndef _COMPRESSOR_H
-#define _COMPRESSOR_H
+#ifndef COMPRESSOR_H_INCLUDED
+#define COMPRESSOR_H_INCLUDED
 
 #include <iostream>
 #include <fstream>
@@ -7,6 +7,7 @@
 #include <queue>
 #include <vector>
 #include <bitset>
+#include "md5.h"
 
 #ifndef ull
 #define ull unsigned long long
@@ -42,7 +43,7 @@ public:
 	2：打开源文件失败
 	3：打开目标文件失败
     **/
-	int compress(string sourcePath, string destinationPath) {
+	int compress(string sourcePath, string destinationPath, string pw="") {
 		codeMap.clear();
 		if (sourcePath.substr(sourcePath.find_last_of(".") + 1) != "tar")
 			return 1; // 源文件扩展名不是tar
@@ -93,10 +94,18 @@ public:
 		/**用哈夫曼树编码**/
 		dfs(root, "");
 		//cout << endl << codeMap.size() << endl;
-		/**写入压缩文件头部，包括补零数（暂时留空）和频率表**/
+		/**写入压缩文件头部：补零数+密码标志（暂时留空）**/
 		const unsigned char zeroUC = 0;
+		outFile.write((char*)&zeroUC, sizeof(zeroUC));
+		/**写入压缩文件头部：密码**/
+		if(!pw.empty()){
+            string pwMD5=getMD5(pw).c_str();
+            cout<<"c:pwMD5="<<pwMD5<<endl;
+            //outFile.write((char*)&pwMD5, 16);
+            outFile<<pwMD5;
+		}
+		/**写入压缩文件头部：频率表**/
 		const ull zeroULL = 0;
-		outFile.write((char*)&zeroUC, sizeof(zeroUC)); // 补零数字段
 		for (int i = 0; i<256; i++) {
 			if (freqMap.count(i) == 0) {
 				outFile.write((char*)&zeroULL, sizeof(zeroULL));
@@ -133,9 +142,12 @@ public:
 				uchar = bs.to_ulong();
 				outFile.write((char *)&uchar, sizeof(uchar));
 			}
-			/**写入头部预留的补零数字段**/
+			/**写入头部预留的补零数+密码标志字段**/
 			outFile.clear();
 			outFile.seekp(0);
+			if(!pw.empty()){
+                zeroNum+=8;
+			}
 			uchar = zeroNum;
 			//cout<<endl<<"补零数："<<zeroNum<<endl;
 			outFile.write((char *)&uchar, sizeof(uchar));
@@ -145,4 +157,4 @@ public:
 		return 0; // 正常执行
 	}
 };
-#endif // _COMPRESSOR_H
+#endif // COMPRESSOR_H_INCLUDED
