@@ -19,11 +19,11 @@ void TaskManager::init() {
                 files.append(file.toString());
             }
             taskList.append(Task(files,
-                            information["backupFilename"].toString(),
-                            information["frequency"].toInt(),
-                            information["password"].toString(),
-                            information["cloud"].toBool(),
-                            QDateTime::fromString(information["nextTime"].toString())));
+                                 information["backupFilename"].toString(),
+                                 information["frequency"].toInt(),
+                                 information["password"].toString(),
+                                 information["cloud"].toBool(),
+                                 QDateTime::fromString(information["nextTime"].toString())));
         }
     } else {
         QFile file("config.json");

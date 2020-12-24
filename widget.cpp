@@ -7,7 +7,7 @@
 #include <regex>
 #include <QDesktopServices>
 
-Widget::Widget(QWidget *parent) : QWidget(parent), ui(new Ui::Widget) {
+Widget::Widget(QWidget* parent) : QWidget(parent), ui(new Ui::Widget) {
     ui->setupUi(this);
     // 使 localGroupBox 可用而 cloudGroupBox不可用
     on_localGroupBox_clicked(true);
@@ -27,7 +27,7 @@ Widget::Widget(QWidget *parent) : QWidget(parent), ui(new Ui::Widget) {
     if (!ui->taskList->currentItem() && ui->taskList->topLevelItemCount()) {
         ui->taskList->setCurrentItem(ui->taskList->topLevelItem(0));
     }
-    connect(&timer, &QTimer::timeout, this, [=]() {
+    connect(&timer, &QTimer::timeout, this, [ = ]() {
         if (taskManager.getTaskList().count()) {
             for (auto& task : taskManager.getTaskList()) {
                 // if (task.nextTime.toString() == QDateTime::currentDateTime().toString()) {
@@ -59,10 +59,10 @@ void Widget::on_passwordCheckBox_stateChanged(int arg1) {
 
 void Widget::on_browseButton_clicked() {
     QString directory = QFileDialog::getExistingDirectory(
-            this,
-            tr("备份到"),
-            "/home",
-            QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+                            this,
+                            tr("备份到"),
+                            "/home",
+                            QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
     if (directory != "") {
         ui->backupFileDictoryLineEdit->setText(directory);
     }
@@ -70,10 +70,10 @@ void Widget::on_browseButton_clicked() {
 
 void Widget::on_addFileButton_clicked() {
     QStringList files = QFileDialog::getOpenFileNames(
-                this,
-                "选择一个或多个文件",
-                "/home",
-                "所有文件 (*.*)");
+                            this,
+                            "选择一个或多个文件",
+                            "/home",
+                            "所有文件 (*.*)");
     for (const auto& file : files) {
         // 去重
         bool duplication = false;
@@ -109,10 +109,10 @@ void Widget::on_clearFileButton_clicked() {
 
 void Widget::on_addDictoryButton_clicked() {
     QString directory = QFileDialog::getExistingDirectory(
-            this,
-            tr("选择一个文件夹"),
-            "/home",
-            QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+                            this,
+                            tr("选择一个文件夹"),
+                            "/home",
+                            QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
     if (directory != "") {
         // 去重
         for (int i = 0; i < ui->backupFileList->topLevelItemCount(); ++i) {
@@ -152,7 +152,7 @@ void Widget::on_startBackupButton_clicked() {
     }
     if (QFileInfo(ui->backupFileDictoryLineEdit->text() + "\\" + ui->backupFilenameLineEdit->text()).exists()) {
         if (QMessageBox::Yes != QMessageBox::question(this, "警告", "文件已存在，确认覆盖？", QMessageBox::Yes | QMessageBox::No)) {
-           return;
+            return;
         }
     }
     if (ui->passwordCheckBox->isChecked() && ui->passwordLineEdit->text().trimmed() == "") {
@@ -196,14 +196,14 @@ void Widget::on_startBackupButton_clicked() {
     // 调用打包压缩加密
     // 校验
     if (ui->cloudCheckBox->isChecked()) {
-        QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+        QNetworkAccessManager* manager = new QNetworkAccessManager(this);
         QFile uploadFile(ui->backupFileDictoryLineEdit->text() + ui->backupFilenameLineEdit->text());
         QNetworkRequest request(QUrl(api + "file/" + ui->backupFilenameLineEdit->text()));
         request.setRawHeader("Content-Type", "application/bak");
         uploadFile.open(QFile::ReadOnly);
-        QNetworkReply *reply = manager->put(request, uploadFile.readAll().toBase64());
+        QNetworkReply* reply = manager->put(request, uploadFile.readAll().toBase64());
         uploadFile.close();
-        connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* _reply) {
+        connect(manager, &QNetworkAccessManager::finished, this, [ = ](QNetworkReply * _reply) {
             if (_reply->readAll().toStdString() == "success") {
                 QMessageBox::information(this, "提示", "上传成功。",
                                          QMessageBox::Yes, QMessageBox::Yes);
@@ -215,7 +215,7 @@ void Widget::on_startBackupButton_clicked() {
         connect(reply,
                 QOverload<QNetworkReply::NetworkError>::of(&QNetworkReply::error),
                 this,
-                [=](QNetworkReply::NetworkError code) {
+        [ = ](QNetworkReply::NetworkError code) {
             if (code) {
                 QMessageBox::information(this, "提示", "上传失败。",
                                          QMessageBox::Yes, QMessageBox::Yes);
@@ -234,13 +234,13 @@ void Widget::on_cloudGroupBox_clicked(bool checked) {
     ui->cloudGroupBox->setChecked(true);
     ui->cloudFileRestoreLineEdit->setEnabled(false);
     ui->cloudFileList->clear();
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    QNetworkAccessManager* manager = new QNetworkAccessManager(this);
     QNetworkRequest request(QUrl(api + "filelist"));
-    QNetworkReply *reply = manager->get(request);
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* _reply) {
+    QNetworkReply* reply = manager->get(request);
+    connect(manager, &QNetworkAccessManager::finished, this, [ = ](QNetworkReply * _reply) {
         auto filelist = QJsonDocument::fromJson(_reply->readAll()).array();
         for (auto file : filelist) {
-            QTreeWidgetItem *item = new QTreeWidgetItem;
+            QTreeWidgetItem* item = new QTreeWidgetItem;
             item->setText(0, file.toString());
             ui->cloudFileList->addTopLevelItem(item);
         }
@@ -248,7 +248,7 @@ void Widget::on_cloudGroupBox_clicked(bool checked) {
     connect(reply,
             QOverload<QNetworkReply::NetworkError>::of(&QNetworkReply::error),
             this,
-            [=](QNetworkReply::NetworkError code) {
+    [ = ](QNetworkReply::NetworkError code) {
         if (code) {
             QMessageBox::information(this, "提示", "拉取云端列表失败。",
                                      QMessageBox::Yes, QMessageBox::Yes);
@@ -267,17 +267,17 @@ void Widget::on_browseLocalFile_clicked() {
     }
 }
 
-void Widget::on_cloudFileList_currentItemChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous) {
+void Widget::on_cloudFileList_currentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous) {
     if (current)
         ui->cloudFileRestoreLineEdit->setText(current->text(0));
 }
 
 void Widget::on_browseRestoreDictoryButton_clicked() {
     QString directory = QFileDialog::getExistingDirectory(
-            this,
-            tr("恢复到"),
-            "/home",
-            QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+                            this,
+                            tr("恢复到"),
+                            "/home",
+                            QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
     if (directory != "") {
         ui->backupFileRestoreDictoryLineEdit->setText(directory);
     }
@@ -302,12 +302,12 @@ void Widget::on_clearTaskButton_clicked() {
     taskManager.clear();
 }
 
-void Widget::on_taskList_customContextMenuRequested(const QPoint &pos) {
-    QTreeWidgetItem * currentItem = ui->taskList->itemAt(pos);
+void Widget::on_taskList_customContextMenuRequested(const QPoint& pos) {
+    QTreeWidgetItem* currentItem = ui->taskList->itemAt(pos);
     if (currentItem) {
         popMenu = new QMenu(this);
         openFolder = popMenu->addAction("打开备份文件所在目录");
-        connect(openFolder, &QAction::triggered, this, [=]() {
+        connect(openFolder, &QAction::triggered, this, [ = ]() {
             QDesktopServices::openUrl(QUrl("file:///" + QFileInfo(currentItem->text(5)).path(), QUrl::TolerantMode));
         });
         popMenu->exec(QCursor::pos());
@@ -336,10 +336,10 @@ void Widget::on_startRestoreButton_clicked() {
         return;
     }
     if (ui->cloudGroupBox->isChecked()) {
-        QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+        QNetworkAccessManager* manager = new QNetworkAccessManager(this);
         QNetworkRequest request(QUrl(api + "file/" + ui->cloudFileRestoreLineEdit->text()));
-        QNetworkReply *reply = manager->get(request);
-        connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* _reply) {
+        QNetworkReply* reply = manager->get(request);
+        connect(manager, &QNetworkAccessManager::finished, this, [ = ](QNetworkReply * _reply) {
             auto file = QByteArray::fromBase64(_reply->readAll());
             /*
             QFile t("testttt.txt");
@@ -351,7 +351,7 @@ void Widget::on_startRestoreButton_clicked() {
         connect(reply,
                 QOverload<QNetworkReply::NetworkError>::of(&QNetworkReply::error),
                 this,
-                [=](QNetworkReply::NetworkError code) {
+        [ = ](QNetworkReply::NetworkError code) {
             if (code) {
                 QMessageBox::information(this, "提示", "云备份下载失败。",
                                          QMessageBox::Yes, QMessageBox::Yes);
@@ -360,19 +360,19 @@ void Widget::on_startRestoreButton_clicked() {
     }
 }
 
-void Widget::on_cloudFileList_customContextMenuRequested(const QPoint &pos) {
-    QTreeWidgetItem * currentItem = ui->cloudFileList->itemAt(pos);
+void Widget::on_cloudFileList_customContextMenuRequested(const QPoint& pos) {
+    QTreeWidgetItem* currentItem = ui->cloudFileList->itemAt(pos);
     if (currentItem) {
         popMenu = new QMenu(this);
         removeCloudBackupFile = popMenu->addAction("删除该云备份");
-        connect(removeCloudBackupFile, &QAction::triggered, this, [=]() {
+        connect(removeCloudBackupFile, &QAction::triggered, this, [ = ]() {
             if (QMessageBox::Yes != QMessageBox::question(this, "警告", "确认删除？", QMessageBox::Yes | QMessageBox::No)) {
-               return;
+                return;
             }
-            QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+            QNetworkAccessManager* manager = new QNetworkAccessManager(this);
             QNetworkRequest request(QUrl(api + "file/" + currentItem->text(0)));
-            QNetworkReply *reply = manager->deleteResource(request);
-            connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* _reply) {
+            QNetworkReply* reply = manager->deleteResource(request);
+            connect(manager, &QNetworkAccessManager::finished, this, [ = ](QNetworkReply * _reply) {
                 if (_reply->readAll().toStdString() == "success") {
                     QMessageBox::information(this, "提示", "删除成功。",
                                              QMessageBox::Yes, QMessageBox::Yes);
@@ -384,7 +384,7 @@ void Widget::on_cloudFileList_customContextMenuRequested(const QPoint &pos) {
             connect(reply,
                     QOverload<QNetworkReply::NetworkError>::of(&QNetworkReply::error),
                     this,
-                    [=](QNetworkReply::NetworkError code) {
+            [ = ](QNetworkReply::NetworkError code) {
                 if (code) {
                     QMessageBox::information(this, "提示", "删除失败。",
                                              QMessageBox::Yes, QMessageBox::Yes);

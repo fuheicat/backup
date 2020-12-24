@@ -14,17 +14,17 @@
 const QString api = "http://127.0.0.1:5000/";
 
 namespace Ui {
-    class Widget;
+class Widget;
 }
 
 class Widget : public QWidget {
     Q_OBJECT
 
-public:
-    explicit Widget(QWidget *parent = nullptr);
+  public:
+    explicit Widget(QWidget* parent = nullptr);
     ~Widget();
 
-private slots:
+  private slots:
     void on_passwordCheckBox_stateChanged(int arg1);
 
     void on_browseButton_clicked();
@@ -45,7 +45,7 @@ private slots:
 
     void on_browseLocalFile_clicked();
 
-    void on_cloudFileList_currentItemChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous);
+    void on_cloudFileList_currentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous);
 
     void on_browseRestoreDictoryButton_clicked();
 
@@ -55,17 +55,17 @@ private slots:
 
     void on_clearTaskButton_clicked();
 
-    void on_taskList_customContextMenuRequested(const QPoint &pos);
+    void on_taskList_customContextMenuRequested(const QPoint& pos);
 
     void on_startRestoreButton_clicked();
 
-    void on_cloudFileList_customContextMenuRequested(const QPoint &pos);
+    void on_cloudFileList_customContextMenuRequested(const QPoint& pos);
 
-private:
-    Ui::Widget *ui;
-    QMenu *popMenu;
-    QAction *openFolder;
-    QAction *removeCloudBackupFile;
+  private:
+    Ui::Widget* ui;
+    QMenu* popMenu;
+    QAction* openFolder;
+    QAction* removeCloudBackupFile;
     TaskManager taskManager;
     QTimer timer;
 };

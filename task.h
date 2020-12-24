@@ -27,7 +27,7 @@ struct Task {
 };
 
 class TaskManager {
-public:
+  public:
     TaskManager();
     void init();
     void addTask(Task task);
@@ -36,7 +36,7 @@ public:
     void updateTime(int index, QDateTime nextTime);
     const QList<Task>& getTaskList();
     void writeJson();
-private:
+  private:
     QList<Task> taskList;
     QJsonDocument config;
 };

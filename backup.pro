@@ -32,7 +32,10 @@ SOURCES += \
 
 HEADERS += \
         widget.h \
-    task.h
+    task.h \
+    compressor.h \
+    decompressor.h \
+    md5.h
 
 FORMS += \
         widget.ui

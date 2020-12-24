@@ -1,4 +1,4 @@
-#ifndef COMPRESSOR_H_INCLUDED
+ï»¿#ifndef COMPRESSOR_H_INCLUDED
 #define COMPRESSOR_H_INCLUDED
 
 #include <iostream>
@@ -15,146 +15,145 @@
 
 using namespace std;
 class Compressor {
-	map<unsigned char, string> codeMap;
-	struct haffNode {
-		ull freq;
-		unsigned char uchar;
-		string code;
-		struct haffNode* left = 0;
-		struct haffNode* right = 0;
-	};
-	struct cmp {
-		bool operator ()(const haffNode *a, const haffNode *b) {
-			return a->freq > b->freq;
-		}
-	};
-	void dfs(haffNode* pn, string code) {
-		pn->code = code;
-		if (pn->left) dfs(pn->left, code + "0");
-		if (pn->right) dfs(pn->right, code + "1");
-		if (!pn->left && !pn->right) {
-			codeMap[pn->uchar] = code;
-		}
-	}
-public:
-	/** ·µ»ØÖµËµÃ÷£º
-	0£ºÕı³£Ö´ĞĞ
-	1£ºÔ´ÎÄ¼şÀ©Õ¹Ãû²»ÊÇtar
-	2£º´ò¿ªÔ´ÎÄ¼şÊ§°Ü
-	3£º´ò¿ªÄ¿±êÎÄ¼şÊ§°Ü
+    map<unsigned char, string> codeMap;
+    struct haffNode {
+        ull freq;
+        unsigned char uchar;
+        string code;
+        struct haffNode* left = 0;
+        struct haffNode* right = 0;
+    };
+    struct cmp {
+        bool operator ()(const haffNode* a, const haffNode* b) {
+            return a->freq > b->freq;
+        }
+    };
+    void dfs(haffNode* pn, string code) {
+        pn->code = code;
+        if (pn->left) dfs(pn->left, code + "0");
+        if (pn->right) dfs(pn->right, code + "1");
+        if (!pn->left && !pn->right) {
+            codeMap[pn->uchar] = code;
+        }
+    }
+  public:
+    /** è¿”å›å€¼è¯´æ˜ï¼š
+    0ï¼šæ­£å¸¸æ‰§è¡Œ
+    1ï¼šæºæ–‡ä»¶æ‰©å±•åä¸æ˜¯tar
+    2ï¼šæ‰“å¼€æºæ–‡ä»¶å¤±è´¥
+    3ï¼šæ‰“å¼€ç›®æ ‡æ–‡ä»¶å¤±è´¥
     **/
-	int compress(string sourcePath, string destinationPath, string pw="") {
-		codeMap.clear();
-		if (sourcePath.substr(sourcePath.find_last_of(".") + 1) != "tar")
-			return 1; // Ô´ÎÄ¼şÀ©Õ¹Ãû²»ÊÇtar
-		ifstream inFile;
-		inFile.open(sourcePath, ios::in | ios::binary);
-		if (!inFile)
-			return 2; // ´ò¿ªÔ´ÎÄ¼şÊ§°Ü
-		ofstream outFile;
-		string newFileName = destinationPath + sourcePath.substr(0, sourcePath.find_last_of(".")) + ".bak";
-		outFile.open(newFileName, ios::out | ios::binary);
-		if (!outFile) {
-			inFile.close();
-			return 3; // ´ò¿ªÄ¿±êÎÄ¼şÊ§°Ü
-		}
-		/**Í³¼Æ´ÊÆµ**/
-		unsigned char uchar;
+    int compress(string sourcePath, string destinationPath, string pw = "") {
+        codeMap.clear();
+        if (sourcePath.substr(sourcePath.find_last_of(".") + 1) != "tar")
+            return 1; // æºæ–‡ä»¶æ‰©å±•åä¸æ˜¯tar
+        ifstream inFile;
+        inFile.open(sourcePath, ios::in | ios::binary);
+        if (!inFile)
+            return 2; // æ‰“å¼€æºæ–‡ä»¶å¤±è´¥
+        ofstream outFile;
+        string newFileName = destinationPath + sourcePath.substr(0, sourcePath.find_last_of(".")) + ".bak";
+        outFile.open(newFileName, ios::out | ios::binary);
+        if (!outFile) {
+            inFile.close();
+            return 3; // æ‰“å¼€ç›®æ ‡æ–‡ä»¶å¤±è´¥
+        }
+        /**ç»Ÿè®¡è¯é¢‘**/
+        unsigned char uchar;
         map<unsigned char, ull> freqMap;
-		while (inFile.read((char *)&uchar, sizeof(char))) {
-			freqMap[uchar]++;
-		}
-		/*for(int i=0;i<256;i++){
-		printf("%d %d\n",i,freqMap[i]);
-		}*/
-		/**½¨Á¢´ÊÆµĞ¡¶¥¶Ñ**/
-		priority_queue<haffNode*, vector<haffNode*>, cmp> freqHeap;
-		map<unsigned char, ull>::reverse_iterator it;
-		for (it = freqMap.rbegin(); it != freqMap.rend(); it++) {
-			haffNode*pn = new(haffNode);
-			pn->freq = it->second;
-			pn->uchar = it->first;
-			pn->left = pn->right = 0;
-			freqHeap.push(pn);
-		}
-		/**¹¹½¨¹ş·òÂüÊ÷**/
-		while (freqHeap.size()>1) {
-			haffNode*pn1 = freqHeap.top();
-			freqHeap.pop();
-			haffNode*pn2 = freqHeap.top();
-			freqHeap.pop();
-			haffNode*pn = new(haffNode);
-			pn->freq = pn1->freq + pn2->freq;
-			pn->left = pn1;
-			pn->right = pn2;
-			freqHeap.push(pn);
-		}
-		haffNode*root = freqHeap.top();
-		codeMap.clear();
-		/**ÓÃ¹ş·òÂüÊ÷±àÂë**/
-		dfs(root, "");
-		//cout << endl << codeMap.size() << endl;
-		/**Ğ´ÈëÑ¹ËõÎÄ¼şÍ·²¿£º²¹ÁãÊı+ÃÜÂë±êÖ¾£¨ÔİÊ±Áô¿Õ£©**/
-		const unsigned char zeroUC = 0;
-		outFile.write((char*)&zeroUC, sizeof(zeroUC));
-		/**Ğ´ÈëÑ¹ËõÎÄ¼şÍ·²¿£ºÃÜÂë**/
-		if(!pw.empty()){
-            string pwMD5=getMD5(pw).c_str();
-            cout<<"c:pwMD5="<<pwMD5<<endl;
+        while (inFile.read((char*)&uchar, sizeof(char))) {
+            freqMap[uchar]++;
+        }
+        /*for(int i=0;i<256;i++){
+        printf("%d %d\n",i,freqMap[i]);
+        }*/
+        /**å»ºç«‹è¯é¢‘å°é¡¶å †**/
+        priority_queue<haffNode*, vector<haffNode*>, cmp> freqHeap;
+        map<unsigned char, ull>::reverse_iterator it;
+        for (it = freqMap.rbegin(); it != freqMap.rend(); it++) {
+            haffNode* pn = new (haffNode);
+            pn->freq = it->second;
+            pn->uchar = it->first;
+            pn->left = pn->right = 0;
+            freqHeap.push(pn);
+        }
+        /**æ„å»ºå“ˆå¤«æ›¼æ ‘**/
+        while (freqHeap.size() > 1) {
+            haffNode* pn1 = freqHeap.top();
+            freqHeap.pop();
+            haffNode* pn2 = freqHeap.top();
+            freqHeap.pop();
+            haffNode* pn = new (haffNode);
+            pn->freq = pn1->freq + pn2->freq;
+            pn->left = pn1;
+            pn->right = pn2;
+            freqHeap.push(pn);
+        }
+        haffNode* root = freqHeap.top();
+        codeMap.clear();
+        /**ç”¨å“ˆå¤«æ›¼æ ‘ç¼–ç **/
+        dfs(root, "");
+        //cout << endl << codeMap.size() << endl;
+        /**å†™å…¥å‹ç¼©æ–‡ä»¶å¤´éƒ¨ï¼šè¡¥é›¶æ•°+å¯†ç æ ‡å¿—ï¼ˆæš‚æ—¶ç•™ç©ºï¼‰**/
+        const unsigned char zeroUC = 0;
+        outFile.write((char*)&zeroUC, sizeof(zeroUC));
+        /**å†™å…¥å‹ç¼©æ–‡ä»¶å¤´éƒ¨ï¼šå¯†ç **/
+        if (!pw.empty()) {
+            string pwMD5 = getMD5(pw).c_str();
+            cout << "c:pwMD5=" << pwMD5 << endl;
             //outFile.write((char*)&pwMD5, 16);
-            outFile<<pwMD5;
-		}
-		/**Ğ´ÈëÑ¹ËõÎÄ¼şÍ·²¿£ºÆµÂÊ±í**/
-		const ull zeroULL = 0;
-		for (int i = 0; i<256; i++) {
-			if (freqMap.count(i) == 0) {
-				outFile.write((char*)&zeroULL, sizeof(zeroULL));
-			}
-			else {
-				ull freq = freqMap[i];
-				outFile.write((char*)&freq, sizeof(freq));
-			}
-		}
-		//outFile.write((char*)&bi, sizeof(bi));
-		/**Ğ´ÈëÑ¹ËõÎÄ¼şÖ÷Ìå**/
-		{
-			inFile.clear();
-			inFile.seekg(0);
-			string buf;
-			unsigned char uchar;
-			while (inFile.read((char *)&uchar, sizeof(uchar))) {
-				buf += codeMap[uchar];
-				//printf("µ±Ç°buf³¤£º%d\n", buf.length());
-				while (buf.length() >= 8) {
-					bitset<8> bs(buf.substr(0, 8));
-					uchar = bs.to_ulong();
-					outFile.write((char *)&uchar, sizeof(uchar));
-					buf = buf.substr(8);
-				}
-			}
-			// Ä©Î²´¦Àí
-			int zeroNum = 8 - buf.length();
-			if (zeroNum) {
-				for (int i = 0; i<zeroNum; i++) {
-					buf += "0";
-				}
-				bitset<8> bs(buf.substr(0, 8));
-				uchar = bs.to_ulong();
-				outFile.write((char *)&uchar, sizeof(uchar));
-			}
-			/**Ğ´ÈëÍ·²¿Ô¤ÁôµÄ²¹ÁãÊı+ÃÜÂë±êÖ¾×Ö¶Î**/
-			outFile.clear();
-			outFile.seekp(0);
-			if(!pw.empty()){
-                zeroNum+=8;
-			}
-			uchar = zeroNum;
-			//cout<<endl<<"²¹ÁãÊı£º"<<zeroNum<<endl;
-			outFile.write((char *)&uchar, sizeof(uchar));
-		}
-		inFile.close();
-		outFile.close();
-		return 0; // Õı³£Ö´ĞĞ
-	}
+            outFile << pwMD5;
+        }
+        /**å†™å…¥å‹ç¼©æ–‡ä»¶å¤´éƒ¨ï¼šé¢‘ç‡è¡¨**/
+        const ull zeroULL = 0;
+        for (int i = 0; i < 256; i++) {
+            if (freqMap.count(i) == 0) {
+                outFile.write((char*)&zeroULL, sizeof(zeroULL));
+            } else {
+                ull freq = freqMap[i];
+                outFile.write((char*)&freq, sizeof(freq));
+            }
+        }
+        //outFile.write((char*)&bi, sizeof(bi));
+        /**å†™å…¥å‹ç¼©æ–‡ä»¶ä¸»ä½“**/
+        {
+            inFile.clear();
+            inFile.seekg(0);
+            string buf;
+            unsigned char uchar;
+            while (inFile.read((char*)&uchar, sizeof(uchar))) {
+                buf += codeMap[uchar];
+                //printf("å½“å‰bufé•¿ï¼š%d\n", buf.length());
+                while (buf.length() >= 8) {
+                    bitset<8> bs(buf.substr(0, 8));
+                    uchar = bs.to_ulong();
+                    outFile.write((char*)&uchar, sizeof(uchar));
+                    buf = buf.substr(8);
+                }
+            }
+            // æœ«å°¾å¤„ç†
+            int zeroNum = 8 - buf.length();
+            if (zeroNum) {
+                for (int i = 0; i < zeroNum; i++) {
+                    buf += "0";
+                }
+                bitset<8> bs(buf.substr(0, 8));
+                uchar = bs.to_ulong();
+                outFile.write((char*)&uchar, sizeof(uchar));
+            }
+            /**å†™å…¥å¤´éƒ¨é¢„ç•™çš„è¡¥é›¶æ•°+å¯†ç æ ‡å¿—å­—æ®µ**/
+            outFile.clear();
+            outFile.seekp(0);
+            if (!pw.empty()) {
+                zeroNum += 8;
+            }
+            uchar = zeroNum;
+            //cout<<endl<<"è¡¥é›¶æ•°ï¼š"<<zeroNum<<endl;
+            outFile.write((char*)&uchar, sizeof(uchar));
+        }
+        inFile.close();
+        outFile.close();
+        return 0; // æ­£å¸¸æ‰§è¡Œ
+    }
 };
 #endif // COMPRESSOR_H_INCLUDED
