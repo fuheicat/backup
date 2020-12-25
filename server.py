@@ -8,7 +8,7 @@ app = Flask(__name__)
 
 @app.route('/filelist', methods=['GET'])
 def filelist():
-    return json.dumps([x for x in os.listdir('.') if os.path.isfile(x)])
+    return json.dumps([x for x in os.listdir('.') if os.path.isfile(x) and x != "server.py"])
 
 
 @app.route('/file/<filename>', methods=['PUT'])
@@ -36,4 +36,4 @@ def get(filename):
 
 
 if __name__ == "__main__":
-    app.run()
+    app.run(host='0.0.0.0')

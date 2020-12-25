@@ -6,6 +6,7 @@
 #include <QMessageBox>
 #include <regex>
 #include <QDesktopServices>
+#include <QProcess>
 
 Widget::Widget(QWidget* parent) : QWidget(parent), ui(new Ui::Widget) {
     ui->setupUi(this);
@@ -194,11 +195,33 @@ void Widget::on_startBackupButton_clicked() {
         }
     }
     // 调用打包压缩加密
+    QProcess tar;
+    QStringList files;
+    for (int i = 0; i < ui->backupFileList->topLevelItemCount(); ++i) {
+        files.append(ui->backupFileList->topLevelItem(i)->text(0));
+    }
+    auto currentDictory = QDir::current();
+    QDir::setCurrent(ui->backupFileDictoryLineEdit->text());
+    tar.start(currentDictory.path() + "/tar.exe", QStringList() << "-cvf" << ui->backupFilenameLineEdit->text() + ".tar" << files);
+    tar.waitForStarted(-1);
+    tar.waitForFinished(-1);
+    Compressor compressor;
+    if (compressor.compress(ui->backupFilenameLineEdit->text().toStdString() + ".tar",
+                            ui->backupFileDictoryLineEdit->text().toStdString(),
+                            ui->passwordCheckBox->isChecked() ? ui->passwordLineEdit->text().toStdString() : "")) {
+        QMessageBox::information(this, "提示", "压缩失败。",
+                                 QMessageBox::Yes, QMessageBox::Yes);
+        return;
+    }
+    QFile tarFile(ui->backupFilenameLineEdit->text() + ".tar");
+    tarFile.remove();
+    QDir::setCurrent(currentDictory.path());
     // 校验
+    // 云上传
     if (ui->cloudCheckBox->isChecked()) {
         QNetworkAccessManager* manager = new QNetworkAccessManager(this);
-        QFile uploadFile(ui->backupFileDictoryLineEdit->text() + ui->backupFilenameLineEdit->text());
-        QNetworkRequest request(QUrl(api + "file/" + ui->backupFilenameLineEdit->text()));
+        QFile uploadFile(ui->backupFileDictoryLineEdit->text() + ui->backupFilenameLineEdit->text() + ".bak");
+        QNetworkRequest request(QUrl(api + "file/" + ui->backupFilenameLineEdit->text() + ".bak"));
         request.setRawHeader("Content-Type", "application/bak");
         uploadFile.open(QFile::ReadOnly);
         QNetworkReply* reply = manager->put(request, uploadFile.readAll().toBase64());
@@ -341,12 +364,32 @@ void Widget::on_startRestoreButton_clicked() {
         QNetworkReply* reply = manager->get(request);
         connect(manager, &QNetworkAccessManager::finished, this, [ = ](QNetworkReply * _reply) {
             auto file = QByteArray::fromBase64(_reply->readAll());
-            /*
-            QFile t("testttt.txt");
-            t.open(QFile::WriteOnly);
-            t.write(file);
-            t.close();
-            */
+            qDebug() << file.size();
+            QFile cloudFile("temp_" + ui->cloudFileRestoreLineEdit->text());
+            cloudFile.open(QFile::WriteOnly);
+            cloudFile.write(file);
+            cloudFile.close();
+            Decompressor decompressor;
+            if (decompressor.decompress("temp_" + ui->cloudFileRestoreLineEdit->text().toStdString(),
+                                        ui->backupFileRestoreDictoryLineEdit->text().toStdString() + "/",
+                                        ui->passwordCheckBox_2->isChecked() ? ui->passwordLineEdit_2->text().toStdString() : "")) {
+                QMessageBox::information(this, "提示", "解压失败。",
+                                         QMessageBox::Yes, QMessageBox::Yes);
+                return;
+            }
+            cloudFile.remove();
+            QProcess tar;
+            auto currentDictory = QDir::current();
+            QDir::setCurrent(ui->backupFileRestoreDictoryLineEdit->text());
+            QString tempFilename = "temp_" + ui->cloudFileRestoreLineEdit->text().left(ui->cloudFileRestoreLineEdit->text().length() - 3) + "tar";
+            tar.start(currentDictory.path() + "/tar.exe", QStringList() << "-xvf" << tempFilename);
+            tar.waitForStarted(-1);
+            tar.waitForFinished(-1);
+            QFile tarFile(tempFilename);
+            tarFile.remove();
+            QDir::setCurrent(currentDictory.path());
+            QMessageBox::information(this, "提示", "恢复完成。",
+                                     QMessageBox::Yes, QMessageBox::Yes);
         });
         connect(reply,
                 QOverload<QNetworkReply::NetworkError>::of(&QNetworkReply::error),
@@ -357,6 +400,30 @@ void Widget::on_startRestoreButton_clicked() {
                                          QMessageBox::Yes, QMessageBox::Yes);
             }
         });
+    } else {
+        Decompressor decompressor;
+        int code = decompressor.decompress(ui->localFileRestoreLineEdit->text().toStdString(),
+                                           ui->backupFileRestoreDictoryLineEdit->text().toStdString() + "/",
+                                           ui->passwordCheckBox_2->isChecked() ? ui->passwordLineEdit_2->text().toStdString() : "");
+        if (code) {
+            QMessageBox::information(this, "提示", "解压失败。",
+                                     QMessageBox::Yes, QMessageBox::Yes);
+            qDebug() << code;
+            return;
+        }
+        QProcess tar;
+        auto currentDictory = QDir::current();
+        QDir::setCurrent(ui->backupFileRestoreDictoryLineEdit->text());
+        QString tempFilename = QFileInfo(ui->localFileRestoreLineEdit->text()).fileName();
+        tempFilename = tempFilename.left(tempFilename.length() - 3) + "tar";
+        tar.start(currentDictory.path() + "/tar.exe", QStringList() << "-xvf" << tempFilename);
+        tar.waitForStarted(-1);
+        tar.waitForFinished(-1);
+        QFile tarFile(tempFilename);
+        tarFile.remove();
+        QDir::setCurrent(currentDictory.path());
+        QMessageBox::information(this, "提示", "恢复完成。",
+                                 QMessageBox::Yes, QMessageBox::Yes);
     }
 }
 

@@ -13,7 +13,7 @@
 #include "compressor.h"
 #include "decompressor.h"
 
-const QString api = "http://127.0.0.1:5000/";
+const QString api = "http://119.28.65.16:5000/";
 
 namespace Ui {
 class Widget;
