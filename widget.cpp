@@ -198,7 +198,7 @@ void Widget::on_startBackupButton_clicked() {
     QProcess tar;
     QStringList files;
     for (int i = 0; i < ui->backupFileList->topLevelItemCount(); ++i) {
-        files.append(ui->backupFileList->topLevelItem(i)->text(0));
+        files.append("./" + ui->backupFileList->topLevelItem(i)->text(0));
     }
     auto currentDictory = QDir::current();
     QDir::setCurrent(rootDictory);

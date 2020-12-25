@@ -8,6 +8,7 @@
 #include <vector>
 #include <bitset>
 #include <QFileInfo>
+#include <QDebug>
 #include "md5.h"
 
 #ifndef ull
@@ -49,6 +50,7 @@ class Compressor {
         if (sourcePath.substr(sourcePath.find_last_of(".") + 1) != "tar")
             return 1; // 源文件扩展名不是tar
         ifstream inFile;
+        qDebug() << QString::fromStdString(sourcePath);
         inFile.open(sourcePath, ios::in | ios::binary);
         if (!inFile)
             return 2; // 打开源文件失败
