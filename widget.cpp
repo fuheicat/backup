@@ -201,16 +201,18 @@ void Widget::on_startBackupButton_clicked() {
         files.append(ui->backupFileList->topLevelItem(i)->text(0));
     }
     auto currentDictory = QDir::current();
-    QDir::setCurrent(ui->backupFileDictoryLineEdit->text());
+    QDir::setCurrent(rootDictory);
     tar.start(currentDictory.path() + "/tar.exe", QStringList() << "-cvf" << ui->backupFilenameLineEdit->text() + ".tar" << files);
     tar.waitForStarted(-1);
     tar.waitForFinished(-1);
     Compressor compressor;
-    if (compressor.compress(ui->backupFilenameLineEdit->text().toStdString() + ".tar",
-                            ui->backupFileDictoryLineEdit->text().toStdString(),
-                            ui->passwordCheckBox->isChecked() ? ui->passwordLineEdit->text().toStdString() : "")) {
+    int code = compressor.compress(ui->backupFilenameLineEdit->text().toStdString() + ".tar",
+                                   ui->backupFileDictoryLineEdit->text().toStdString(),
+                                   ui->passwordCheckBox->isChecked() ? ui->passwordLineEdit->text().toStdString() : "");
+    if (code) {
         QMessageBox::information(this, "提示", "压缩失败。",
                                  QMessageBox::Yes, QMessageBox::Yes);
+        qDebug() << code;
         return;
     }
     QFile tarFile(ui->backupFilenameLineEdit->text() + ".tar");
