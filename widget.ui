@@ -261,7 +261,7 @@
       <string>备份到</string>
      </property>
     </widget>
-    <widget class="QLineEdit" name="backupFileDictoryLineEdit">
+    <widget class="QLineEdit" name="backupFileDirectoryLineEdit">
      <property name="enabled">
       <bool>false</bool>
      </property>
@@ -414,7 +414,7 @@
       <enum>Qt::ToolButtonTextUnderIcon</enum>
      </property>
     </widget>
-    <widget class="QToolButton" name="addDictoryButton">
+    <widget class="QToolButton" name="addDirectoryButton">
      <property name="geometry">
       <rect>
        <x>483</x>
@@ -583,7 +583,7 @@
       </property>
      </widget>
     </widget>
-    <widget class="QLineEdit" name="backupFileRestoreDictoryLineEdit">
+    <widget class="QLineEdit" name="backupFileRestoreDirectoryLineEdit">
      <property name="enabled">
       <bool>false</bool>
      </property>
@@ -596,7 +596,7 @@
       </rect>
      </property>
     </widget>
-    <widget class="QToolButton" name="browseRestoreDictoryButton">
+    <widget class="QToolButton" name="browseRestoreDirectoryButton">
      <property name="geometry">
       <rect>
        <x>680</x>

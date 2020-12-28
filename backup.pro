@@ -38,6 +38,11 @@ HEADERS += \
     decompressor.h \
     md5.h
 
+msvc {
+    QMAKE_CFLAGS += /utf-8
+    QMAKE_CXXFLAGS += /utf-8
+}
+
 FORMS += \
         widget.ui
 # Default rules for deployment.

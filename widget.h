@@ -37,7 +37,7 @@ class Widget : public QWidget {
 
     void on_clearFileButton_clicked();
 
-    void on_addDictoryButton_clicked();
+    void on_addDirectoryButton_clicked();
 
     void on_startBackupButton_clicked();
 
@@ -49,7 +49,7 @@ class Widget : public QWidget {
 
     void on_cloudFileList_currentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous);
 
-    void on_browseRestoreDictoryButton_clicked();
+    void on_browseRestoreDirectoryButton_clicked();
 
     void on_passwordCheckBox_2_stateChanged(int arg1);
 

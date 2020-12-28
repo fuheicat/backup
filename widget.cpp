@@ -65,7 +65,7 @@ void Widget::on_browseButton_clicked() {
                             "/home",
                             QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
     if (directory != "") {
-        ui->backupFileDictoryLineEdit->setText(directory);
+        ui->backupFileDirectoryLineEdit->setText(directory);
     }
 }
 
@@ -108,7 +108,7 @@ void Widget::on_clearFileButton_clicked() {
     }
 }
 
-void Widget::on_addDictoryButton_clicked() {
+void Widget::on_addDirectoryButton_clicked() {
     QString directory = QFileDialog::getExistingDirectory(
                             this,
                             tr("选择一个文件夹"),
@@ -140,7 +140,7 @@ void Widget::on_startBackupButton_clicked() {
                                  QMessageBox::Yes, QMessageBox::Yes);
         return;
     }
-    if (ui->backupFileDictoryLineEdit->text().trimmed() == "") {
+    if (ui->backupFileDirectoryLineEdit->text().trimmed() == "") {
         QMessageBox::information(this, "提示", "请输入备份保存到的目录。",
                                  QMessageBox::Yes, QMessageBox::Yes);
         return;
@@ -151,7 +151,7 @@ void Widget::on_startBackupButton_clicked() {
                                  QMessageBox::Yes, QMessageBox::Yes);
         return;
     }
-    if (QFileInfo(ui->backupFileDictoryLineEdit->text() + "\\" + ui->backupFilenameLineEdit->text()).exists()) {
+    if (QFileInfo(ui->backupFileDirectoryLineEdit->text() + "\\" + ui->backupFilenameLineEdit->text()).exists()) {
         if (QMessageBox::Yes != QMessageBox::question(this, "警告", "文件已存在，确认覆盖？", QMessageBox::Yes | QMessageBox::No)) {
             return;
         }
@@ -162,9 +162,9 @@ void Widget::on_startBackupButton_clicked() {
         return;
     }
     // 都与第一个文件的目录对比
-    auto rootDictory = QFileInfo(ui->backupFileList->topLevelItem(0)->text(1)).path();
+    auto rootDirectory = QFileInfo(ui->backupFileList->topLevelItem(0)->text(1)).path();
     for (int i = 1; i < ui->backupFileList->topLevelItemCount(); ++i) {
-        if (QFileInfo(ui->backupFileList->topLevelItem(i)->text(1)).path() != rootDictory) {
+        if (QFileInfo(ui->backupFileList->topLevelItem(i)->text(1)).path() != rootDirectory) {
             QMessageBox::information(this, "提示", "选择的文件或文件夹应位于同一目录下。",
                                      QMessageBox::Yes, QMessageBox::Yes);
             return;
@@ -178,14 +178,14 @@ void Widget::on_startBackupButton_clicked() {
         taskItem->setText(2, ui->everydayRadioButton->isChecked() ? "每天" : "每周");
         taskItem->setText(3, ui->passwordCheckBox->isChecked() ? "是" : "否");
         taskItem->setText(4, ui->cloudCheckBox->isChecked() ? "是" : "否");
-        taskItem->setText(5, ui->backupFileDictoryLineEdit->text() + ui->backupFilenameLineEdit->text());
+        taskItem->setText(5, ui->backupFileDirectoryLineEdit->text() + ui->backupFilenameLineEdit->text());
         ui->taskList->addTopLevelItem(taskItem);
         QList<QString> files;
         for (int i = 0; i < ui->backupFileList->topLevelItemCount(); ++i) {
             files.append(ui->backupFileList->topLevelItem(i)->text(1));
         }
         taskManager.addTask(Task(files,
-                                 ui->backupFileDictoryLineEdit->text() + ui->backupFilenameLineEdit->text(),
+                                 ui->backupFileDirectoryLineEdit->text() + ui->backupFilenameLineEdit->text(),
                                  ui->everydayRadioButton->isChecked() ? 1 : 2,
                                  ui->passwordLineEdit->text(),
                                  ui->cloudCheckBox->isChecked(),
@@ -200,14 +200,14 @@ void Widget::on_startBackupButton_clicked() {
     for (int i = 0; i < ui->backupFileList->topLevelItemCount(); ++i) {
         files.append("./" + ui->backupFileList->topLevelItem(i)->text(0));
     }
-    auto currentDictory = QDir::current();
-    QDir::setCurrent(rootDictory);
-    tar.start(currentDictory.path() + "/tar.exe", QStringList() << "-cvf" << ui->backupFilenameLineEdit->text() + ".tar" << files);
+    auto currentDirectory = QDir::current();
+    QDir::setCurrent(rootDirectory);
+    tar.start(currentDirectory.path() + "/tar.exe", QStringList() << "-cvf" << ui->backupFilenameLineEdit->text() + ".tar" << files);
     tar.waitForStarted(-1);
     tar.waitForFinished(-1);
     Compressor compressor;
     int code = compressor.compress(ui->backupFilenameLineEdit->text().toStdString() + ".tar",
-                                   ui->backupFileDictoryLineEdit->text().toStdString(),
+                                   ui->backupFileDirectoryLineEdit->text().toStdString() + "/",
                                    ui->passwordCheckBox->isChecked() ? ui->passwordLineEdit->text().toStdString() : "");
     if (code) {
         QMessageBox::information(this, "提示", "压缩失败。",
@@ -217,12 +217,12 @@ void Widget::on_startBackupButton_clicked() {
     }
     QFile tarFile(ui->backupFilenameLineEdit->text() + ".tar");
     tarFile.remove();
-    QDir::setCurrent(currentDictory.path());
+    QDir::setCurrent(currentDirectory.path());
     // 校验
     // 云上传
     if (ui->cloudCheckBox->isChecked()) {
         QNetworkAccessManager* manager = new QNetworkAccessManager(this);
-        QFile uploadFile(ui->backupFileDictoryLineEdit->text() + ui->backupFilenameLineEdit->text() + ".bak");
+        QFile uploadFile(ui->backupFileDirectoryLineEdit->text() + "/" + ui->backupFilenameLineEdit->text() + ".bak");
         QNetworkRequest request(QUrl(api + "file/" + ui->backupFilenameLineEdit->text() + ".bak"));
         request.setRawHeader("Content-Type", "application/bak");
         uploadFile.open(QFile::ReadOnly);
@@ -246,6 +246,9 @@ void Widget::on_startBackupButton_clicked() {
                                          QMessageBox::Yes, QMessageBox::Yes);
             }
         });
+    } else {
+        QMessageBox::information(this, "提示", "备份成功。",
+                                 QMessageBox::Yes, QMessageBox::Yes);
     }
 }
 
@@ -297,14 +300,14 @@ void Widget::on_cloudFileList_currentItemChanged(QTreeWidgetItem* current, QTree
         ui->cloudFileRestoreLineEdit->setText(current->text(0));
 }
 
-void Widget::on_browseRestoreDictoryButton_clicked() {
+void Widget::on_browseRestoreDirectoryButton_clicked() {
     QString directory = QFileDialog::getExistingDirectory(
                             this,
                             tr("恢复到"),
                             "/home",
                             QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
     if (directory != "") {
-        ui->backupFileRestoreDictoryLineEdit->setText(directory);
+        ui->backupFileRestoreDirectoryLineEdit->setText(directory);
     }
 }
 
@@ -350,7 +353,7 @@ void Widget::on_startRestoreButton_clicked() {
                                  QMessageBox::Yes, QMessageBox::Yes);
         return;
     }
-    if (ui->backupFileRestoreDictoryLineEdit->text().trimmed() == "") {
+    if (ui->backupFileRestoreDirectoryLineEdit->text().trimmed() == "") {
         QMessageBox::information(this, "提示", "请选择要恢复到的目录。",
                                  QMessageBox::Yes, QMessageBox::Yes);
         return;
@@ -373,7 +376,7 @@ void Widget::on_startRestoreButton_clicked() {
             cloudFile.close();
             Decompressor decompressor;
             if (decompressor.decompress("temp_" + ui->cloudFileRestoreLineEdit->text().toStdString(),
-                                        ui->backupFileRestoreDictoryLineEdit->text().toStdString() + "/",
+                                        ui->backupFileRestoreDirectoryLineEdit->text().toStdString() + "/",
                                         ui->passwordCheckBox_2->isChecked() ? ui->passwordLineEdit_2->text().toStdString() : "")) {
                 QMessageBox::information(this, "提示", "解压失败。",
                                          QMessageBox::Yes, QMessageBox::Yes);
@@ -381,15 +384,15 @@ void Widget::on_startRestoreButton_clicked() {
             }
             cloudFile.remove();
             QProcess tar;
-            auto currentDictory = QDir::current();
-            QDir::setCurrent(ui->backupFileRestoreDictoryLineEdit->text());
+            auto currentDirectory = QDir::current();
+            QDir::setCurrent(ui->backupFileRestoreDirectoryLineEdit->text());
             QString tempFilename = "temp_" + ui->cloudFileRestoreLineEdit->text().left(ui->cloudFileRestoreLineEdit->text().length() - 3) + "tar";
-            tar.start(currentDictory.path() + "/tar.exe", QStringList() << "-xvf" << tempFilename);
+            tar.start(currentDirectory.path() + "/tar.exe", QStringList() << "-xvf" << tempFilename);
             tar.waitForStarted(-1);
             tar.waitForFinished(-1);
             QFile tarFile(tempFilename);
             tarFile.remove();
-            QDir::setCurrent(currentDictory.path());
+            QDir::setCurrent(currentDirectory.path());
             QMessageBox::information(this, "提示", "恢复完成。",
                                      QMessageBox::Yes, QMessageBox::Yes);
         });
@@ -405,7 +408,7 @@ void Widget::on_startRestoreButton_clicked() {
     } else {
         Decompressor decompressor;
         int code = decompressor.decompress(ui->localFileRestoreLineEdit->text().toStdString(),
-                                           ui->backupFileRestoreDictoryLineEdit->text().toStdString() + "/",
+                                           ui->backupFileRestoreDirectoryLineEdit->text().toStdString() + "/",
                                            ui->passwordCheckBox_2->isChecked() ? ui->passwordLineEdit_2->text().toStdString() : "");
         if (code) {
             QMessageBox::information(this, "提示", "解压失败。",
@@ -414,16 +417,16 @@ void Widget::on_startRestoreButton_clicked() {
             return;
         }
         QProcess tar;
-        auto currentDictory = QDir::current();
-        QDir::setCurrent(ui->backupFileRestoreDictoryLineEdit->text());
+        auto currentDirectory = QDir::current();
+        QDir::setCurrent(ui->backupFileRestoreDirectoryLineEdit->text());
         QString tempFilename = QFileInfo(ui->localFileRestoreLineEdit->text()).fileName();
         tempFilename = tempFilename.left(tempFilename.length() - 3) + "tar";
-        tar.start(currentDictory.path() + "/tar.exe", QStringList() << "-xvf" << tempFilename);
+        tar.start(currentDirectory.path() + "/tar.exe", QStringList() << "-xvf" << tempFilename);
         tar.waitForStarted(-1);
         tar.waitForFinished(-1);
         QFile tarFile(tempFilename);
         tarFile.remove();
-        QDir::setCurrent(currentDictory.path());
+        QDir::setCurrent(currentDirectory.path());
         QMessageBox::information(this, "提示", "恢复完成。",
                                  QMessageBox::Yes, QMessageBox::Yes);
     }
