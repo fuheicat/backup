@@ -335,8 +335,12 @@ void Widget::on_taskList_customContextMenuRequested(const QPoint& pos) {
     if (currentItem) {
         popMenu = new QMenu(this);
         openFolder = popMenu->addAction("打开备份文件所在目录");
+        check = popMenu->addAction("与原文件校验");
         connect(openFolder, &QAction::triggered, this, [ = ]() {
             QDesktopServices::openUrl(QUrl("file:///" + QFileInfo(currentItem->text(5)).path(), QUrl::TolerantMode));
+        });
+        connect(check, &QAction::triggered, this, [ = ]() {
+
         });
         popMenu->exec(QCursor::pos());
     }

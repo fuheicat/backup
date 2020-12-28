@@ -68,6 +68,7 @@ class Widget : public QWidget {
     QMenu* popMenu;
     QAction* openFolder;
     QAction* removeCloudBackupFile;
+    QAction* check;
     TaskManager taskManager;
     QTimer timer;
 };
