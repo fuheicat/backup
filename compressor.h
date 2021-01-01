@@ -30,10 +30,10 @@ class Compressor {
             return a->freq > b->freq;
         }
     };
-    void dfs(haffNode* pn, string code) {
+    void encode(haffNode* pn, string code) {
         pn->code = code;
-        if (pn->left) dfs(pn->left, code + "0");
-        if (pn->right) dfs(pn->right, code + "1");
+        if (pn->left) encode(pn->left, code + "0");
+        if (pn->right) encode(pn->right, code + "1");
         if (!pn->left && !pn->right) {
             codeMap[pn->uchar] = code;
         }
@@ -97,7 +97,7 @@ class Compressor {
         haffNode* root = freqHeap.top();
         codeMap.clear();
         /**用哈夫曼树编码**/
-        dfs(root, "");
+        encode(root, "");
         //cout << endl << codeMap.size() << endl;
         /**写入压缩文件头部：补零数+密码标志（暂时留空）**/
         const unsigned char zeroUC = 0;
