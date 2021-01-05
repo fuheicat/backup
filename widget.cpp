@@ -10,6 +10,7 @@
 
 Widget::Widget(QWidget* parent) : QWidget(parent), ui(new Ui::Widget) {
     ui->setupUi(this);
+    this->setFixedSize({768, 768});
     // 使 localGroupBox 可用而 cloudGroupBox不可用
     on_localGroupBox_clicked(true);
     on_cloudGroupBox_clicked(true);
@@ -17,12 +18,12 @@ Widget::Widget(QWidget* parent) : QWidget(parent), ui(new Ui::Widget) {
     taskManager.init();
     for (const auto& task : taskManager.getTaskList()) {
         QTreeWidgetItem* taskItem = new QTreeWidgetItem;
-        taskItem->setText(0, QFileInfo(task.backupFilename).fileName());
+        taskItem->setText(0, QFileInfo(task.backupFilename).fileName() + ".bak");
         taskItem->setText(1, task.nextTime.toString());
         taskItem->setText(2, task.frequency == 1 ? "每天" : "每周");
         taskItem->setText(3, task.password.trimmed() != "" ? "是" : "否");
         taskItem->setText(4, task.cloud ? "是" : "否");
-        taskItem->setText(5, task.backupFilename);
+        taskItem->setText(5, task.backupFilename + ".bak");
         ui->taskList->addTopLevelItem(taskItem);
     }
     if (!ui->taskList->currentItem() && ui->taskList->topLevelItemCount()) {
@@ -34,6 +35,62 @@ Widget::Widget(QWidget* parent) : QWidget(parent), ui(new Ui::Widget) {
                 // if (task.nextTime.toString() == QDateTime::currentDateTime().toString()) {
                 if (task.nextTime <= QDateTime::currentDateTime()) {
                     // 执行
+                    QProcess tar;
+                    QStringList files;
+                    for (auto i : task.files) {
+                        files.append("./" + QFileInfo(i).fileName());
+                    }
+                    auto rootDirectory = QFileInfo(task.files[0]).path();
+                    auto currentDirectory = QDir::current();
+                    QDir::setCurrent(rootDirectory);
+                    tar.start(currentDirectory.path() + "/tar.exe", QStringList() << "-cvf" << QFileInfo(task.backupFilename).fileName() + ".tar" << files);
+                    tar.waitForStarted(-1);
+                    tar.waitForFinished(-1);
+                    Compressor compressor;
+                    int errorCode = compressor.compress(QFileInfo(task.backupFilename).fileName().toStdString() + ".tar",
+                                                        QFileInfo(task.backupFilename).path().toStdString() + "/",
+                                                        task.password.toStdString());
+                    if (errorCode) {
+                        QStringList message = {"正常执行", "源文件扩展名不是bak", "打开源文件失败", "打开目标文件失败"};
+                        QMessageBox::information(this, "提示", message[errorCode],
+                                                 QMessageBox::Yes, QMessageBox::Yes);
+                        qDebug() << errorCode;
+                        return;
+                    }
+                    QFile tarFile(QFileInfo(task.backupFilename).fileName() + ".tar");
+                    tarFile.remove();
+                    QDir::setCurrent(currentDirectory.path());
+                    // 云上传
+                    if (task.cloud) {
+                        QNetworkAccessManager* manager = new QNetworkAccessManager(this);
+                        QFile uploadFile(task.backupFilename + ".bak");
+                        QNetworkRequest request(QUrl(api + "file/" + QFileInfo(task.backupFilename).fileName() + ".bak"));
+                        request.setRawHeader("Content-Type", "application/bak");
+                        uploadFile.open(QFile::ReadOnly);
+                        QNetworkReply* reply = manager->put(request, uploadFile.readAll().toBase64());
+                        uploadFile.close();
+                        connect(manager, &QNetworkAccessManager::finished, this, [ = ](QNetworkReply * _reply) {
+                            if (_reply->readAll().toStdString() == "success") {
+                                QMessageBox::information(this, "提示", "上传成功。",
+                                                         QMessageBox::Yes, QMessageBox::Yes);
+                            }
+                        });
+                        connect(reply, &QNetworkReply::uploadProgress, this, [](qint64 bytesReceived, qint64 bytesTotal) {
+                            qDebug() << bytesReceived << "/" << bytesTotal;
+                        });
+                        connect(reply,
+                                QOverload<QNetworkReply::NetworkError>::of(&QNetworkReply::error),
+                                this,
+                        [ = ](QNetworkReply::NetworkError code) {
+                            if (code) {
+                                QMessageBox::information(this, "提示", "上传失败。",
+                                                         QMessageBox::Yes, QMessageBox::Yes);
+                            }
+                        });
+                    } else {
+                        QMessageBox::information(this, "提示", "备份成功。",
+                                                 QMessageBox::Yes, QMessageBox::Yes);
+                    }
                     // 更新下一次备份时间
                     int index = taskManager.getTaskList().indexOf(task);
                     while (task.nextTime <= QDateTime::currentDateTime()) {
@@ -172,20 +229,20 @@ void Widget::on_startBackupButton_clicked() {
     }
     if (!ui->noneRadioButton->isChecked()) {
         QTreeWidgetItem* taskItem = new QTreeWidgetItem;
-        taskItem->setText(0, ui->backupFilenameLineEdit->text());
+        taskItem->setText(0, ui->backupFilenameLineEdit->text() + ".bak");
         auto nextTime = QDateTime::currentDateTime().addDays(ui->everydayRadioButton->isChecked() ? 1 : 7);
         taskItem->setText(1, nextTime.toString());
         taskItem->setText(2, ui->everydayRadioButton->isChecked() ? "每天" : "每周");
         taskItem->setText(3, ui->passwordCheckBox->isChecked() ? "是" : "否");
         taskItem->setText(4, ui->cloudCheckBox->isChecked() ? "是" : "否");
-        taskItem->setText(5, ui->backupFileDirectoryLineEdit->text() + ui->backupFilenameLineEdit->text());
+        taskItem->setText(5, ui->backupFileDirectoryLineEdit->text() + "/" +  ui->backupFilenameLineEdit->text() + ".bak");
         ui->taskList->addTopLevelItem(taskItem);
         QList<QString> files;
         for (int i = 0; i < ui->backupFileList->topLevelItemCount(); ++i) {
             files.append(ui->backupFileList->topLevelItem(i)->text(1));
         }
         taskManager.addTask(Task(files,
-                                 ui->backupFileDirectoryLineEdit->text() + ui->backupFilenameLineEdit->text(),
+                                 ui->backupFileDirectoryLineEdit->text() + "/" + ui->backupFilenameLineEdit->text(),
                                  ui->everydayRadioButton->isChecked() ? 1 : 2,
                                  ui->passwordLineEdit->text(),
                                  ui->cloudCheckBox->isChecked(),
@@ -206,19 +263,19 @@ void Widget::on_startBackupButton_clicked() {
     tar.waitForStarted(-1);
     tar.waitForFinished(-1);
     Compressor compressor;
-    int code = compressor.compress(ui->backupFilenameLineEdit->text().toStdString() + ".tar",
-                                   ui->backupFileDirectoryLineEdit->text().toStdString() + "/",
-                                   ui->passwordCheckBox->isChecked() ? ui->passwordLineEdit->text().toStdString() : "");
-    if (code) {
-        QMessageBox::information(this, "提示", "压缩失败。",
+    int errorCode = compressor.compress(ui->backupFilenameLineEdit->text().toStdString() + ".tar",
+                                        ui->backupFileDirectoryLineEdit->text().toStdString() + "/",
+                                        ui->passwordCheckBox->isChecked() ? ui->passwordLineEdit->text().toStdString() : "");
+    if (errorCode) {
+        QStringList message = {"正常执行", "源文件扩展名不是bak", "打开源文件失败", "打开目标文件失败"};
+        QMessageBox::information(this, "提示", message[errorCode],
                                  QMessageBox::Yes, QMessageBox::Yes);
-        qDebug() << code;
+        qDebug() << errorCode;
         return;
     }
     QFile tarFile(ui->backupFilenameLineEdit->text() + ".tar");
     tarFile.remove();
     QDir::setCurrent(currentDirectory.path());
-    // 校验
     // 云上传
     if (ui->cloudCheckBox->isChecked()) {
         QNetworkAccessManager* manager = new QNetworkAccessManager(this);
@@ -379,10 +436,12 @@ void Widget::on_startRestoreButton_clicked() {
             cloudFile.write(file);
             cloudFile.close();
             Decompressor decompressor;
-            if (decompressor.decompress("temp_" + ui->cloudFileRestoreLineEdit->text().toStdString(),
-                                        ui->backupFileRestoreDirectoryLineEdit->text().toStdString() + "/",
-                                        ui->passwordCheckBox_2->isChecked() ? ui->passwordLineEdit_2->text().toStdString() : "")) {
-                QMessageBox::information(this, "提示", "解压失败。",
+            int errorCode = decompressor.decompress("temp_" + ui->cloudFileRestoreLineEdit->text().toStdString(),
+                                                    ui->backupFileRestoreDirectoryLineEdit->text().toStdString() + "/",
+                                                    ui->passwordCheckBox_2->isChecked() ? ui->passwordLineEdit_2->text().toStdString() : "");
+            if (errorCode) {
+                QStringList message = {"正常执行", "源文件扩展名不是bak", "打开源文件失败", "打开目标文件失败", "文件过短，频率表不完整", "文件结尾不完整", "密码错误", "解码错误"};
+                QMessageBox::information(this, "提示", message[errorCode],
                                          QMessageBox::Yes, QMessageBox::Yes);
                 return;
             }
@@ -411,13 +470,13 @@ void Widget::on_startRestoreButton_clicked() {
         });
     } else {
         Decompressor decompressor;
-        int code = decompressor.decompress(ui->localFileRestoreLineEdit->text().toStdString(),
-                                           ui->backupFileRestoreDirectoryLineEdit->text().toStdString() + "/",
-                                           ui->passwordCheckBox_2->isChecked() ? ui->passwordLineEdit_2->text().toStdString() : "");
-        if (code) {
-            QMessageBox::information(this, "提示", "解压失败。",
+        int errorCode = decompressor.decompress(ui->localFileRestoreLineEdit->text().toStdString(),
+                                                ui->backupFileRestoreDirectoryLineEdit->text().toStdString() + "/",
+                                                ui->passwordCheckBox_2->isChecked() ? ui->passwordLineEdit_2->text().toStdString() : "");
+        if (errorCode) {
+            QStringList message = {"正常执行", "源文件扩展名不是bak", "打开源文件失败", "打开目标文件失败", "文件过短，频率表不完整", "文件结尾不完整", "密码错误", "解码错误"};
+            QMessageBox::information(this, "提示", message[errorCode],
                                      QMessageBox::Yes, QMessageBox::Yes);
-            qDebug() << code;
             return;
         }
         QProcess tar;
