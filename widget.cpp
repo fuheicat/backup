@@ -445,6 +445,7 @@ void Widget::on_taskList_customContextMenuRequested(const QPoint& pos) {
                 QProcess notepad;
                 notepad.startDetached("notepad diff.txt");
             }
+            dir.rmdir("./TEMP");
         });
         popMenu->exec(QCursor::pos());
     }
@@ -505,6 +506,7 @@ void Widget::on_startRestoreButton_clicked() {
             QDir::setCurrent(currentDirectory.path());
             QMessageBox::information(this, "提示", "恢复完成。",
                                      QMessageBox::Yes, QMessageBox::Yes);
+            QDesktopServices::openUrl(QUrl("file:///" + ui->backupFileRestoreDirectoryLineEdit->text(), QUrl::TolerantMode));
         });
         connect(reply,
                 QOverload<QNetworkReply::NetworkError>::of(&QNetworkReply::error),
@@ -539,6 +541,7 @@ void Widget::on_startRestoreButton_clicked() {
         QDir::setCurrent(currentDirectory.path());
         QMessageBox::information(this, "提示", "恢复完成。",
                                  QMessageBox::Yes, QMessageBox::Yes);
+        QDesktopServices::openUrl(QUrl("file:///" + ui->backupFileRestoreDirectoryLineEdit->text(), QUrl::TolerantMode));
     }
 }
 
