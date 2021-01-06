@@ -7,9 +7,15 @@
 
 class Pack {
   public:
+    /*
+     * destination 打开失败返回1
+     * files 中的文件打开失败返回2
+     * 正常返回0
+     */
     static int pack(QStringList files, QString destination) {
         QFile tar(destination);
-        tar.open(QFile::WriteOnly);
+        bool success = tar.open(QFile::WriteOnly);
+        if (!success) return 1;
         auto root = QFileInfo(files[0]).path();
         for (auto& file : files) {
             if (QFileInfo(file).isFile()) {
@@ -23,7 +29,8 @@ class Pack {
                 tar.write((const char*)&dir, sizeof (dir));
                 tar.write((const char*)&fileLength, sizeof (fileLength));
                 QFile data(file);
-                data.open(QFile::ReadOnly);
+                bool success = data.open(QFile::ReadOnly);
+                if (!success) return 2;
                 tar.write(data.readAll());
                 data.close();
             } else {
@@ -53,7 +60,8 @@ class Pack {
                         tar.write((const char*)&dir, sizeof (dir));
                         tar.write((const char*)&fileLength, sizeof (fileLength));
                         QFile data(info.absoluteFilePath());
-                        data.open(QFile::ReadOnly);
+                        bool success = data.open(QFile::ReadOnly);
+                        if (!success) return 2;
                         tar.write(data.readAll());
                         data.close();
                     }
@@ -61,6 +69,7 @@ class Pack {
             }
         }
         tar.close();
+        return 0;
     }
 };
 

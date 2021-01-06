@@ -6,10 +6,16 @@
 
 class Unpack {
   public:
+    /*
+     * tar打开失败返回1
+     * 写目标文件失败返回2
+     * 创建目录失败返回3
+     * 正常返回0
+     */
     static int unpack(QString tarFilename, QString destination) {
         QFile tar(tarFilename);
-        tar.open(QFile::ReadOnly);
-
+        bool success = tar.open(QFile::ReadOnly);
+        if (!success) return 1;
         int pathLength;
         int dir;
         int fileLength;
@@ -26,11 +32,12 @@ class Unpack {
             qDebug() << fileLength;
             if (!dir) {
                 QFile data(destination + "/" + relativePath);
-                data.open(QFile::WriteOnly);
+                bool success = data.open(QFile::WriteOnly);
+                if (!success) return 2;
                 if (fileLength) {
                     char* content = new char[fileLength];
                     tar.read(content, fileLength);
-                    data.write(content);
+                    data.write(content, fileLength);
                     delete[] content;
                 } else {
                     data.write("");
@@ -38,10 +45,12 @@ class Unpack {
                 data.close();
             } else {
                 QDir dir;
-                dir.mkdir(destination + "/" + relativePath);
+                if (QFileInfo(destination + "/" + relativePath).exists()) continue;
+                bool success = dir.mkdir(destination + "/" + relativePath);
+                if (!success) return 3;
             }
         }
-        return 1;
+        return 0;
     }
 };
 

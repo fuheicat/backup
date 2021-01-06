@@ -9,8 +9,6 @@
 #include <QProcess>
 
 Widget::Widget(QWidget* parent) : QWidget(parent), ui(new Ui::Widget) {
-    Pack::pack(QStringList({"D:/pascalout.txt", "D:/demo"}), "D:/998.tar");
-    Unpack::unpack("D:/998.tar", "E:/test");
     ui->setupUi(this);
     this->setFixedSize({768, 768});
     // 使 localGroupBox 可用而 cloudGroupBox不可用
@@ -37,21 +35,28 @@ Widget::Widget(QWidget* parent) : QWidget(parent), ui(new Ui::Widget) {
                 // if (task.nextTime.toString() == QDateTime::currentDateTime().toString()) {
                 if (task.nextTime <= QDateTime::currentDateTime()) {
                     // 执行
-                    QProcess tar;
+                    /*QProcess tar;*/
                     QStringList files;
                     for (auto i : task.files) {
-                        files.append("./" + QFileInfo(i).fileName());
+                        files.append(i);
                     }
-                    auto rootDirectory = QFileInfo(task.files[0]).path();
+                    /*auto rootDirectory = QFileInfo(task.files[0]).path();
                     auto currentDirectory = QDir::current();
                     QDir::setCurrent(rootDirectory);
                     tar.start(currentDirectory.path() + "/tar.exe", QStringList() << "-cvf" << QFileInfo(task.backupFilename).fileName() + ".tar" << files);
                     tar.waitForStarted(-1);
-                    tar.waitForFinished(-1);
+                    tar.waitForFinished(-1);*/
+                    int errorCode = Pack::pack(files, QFileInfo(task.backupFilename).fileName() + ".tar");
+                    if (errorCode) {
+                        QStringList message = {"正常执行", "目标文件打开失败", "打开源文件失败"};
+                        QMessageBox::information(this, "提示", message[errorCode],
+                                                 QMessageBox::Yes, QMessageBox::Yes);
+                        return;
+                    }
                     Compressor compressor;
-                    int errorCode = compressor.compress(QFileInfo(task.backupFilename).fileName().toStdString() + ".tar",
-                                                        QFileInfo(task.backupFilename).path().toStdString() + "/",
-                                                        task.password.toStdString());
+                    errorCode = compressor.compress(QFileInfo(task.backupFilename).fileName().toStdString() + ".tar",
+                                                    QFileInfo(task.backupFilename).path().toStdString() + "/",
+                                                    task.password.toStdString());
                     if (errorCode) {
                         QStringList message = {"正常执行", "源文件扩展名不是bak", "打开源文件失败", "打开目标文件失败"};
                         QMessageBox::information(this, "提示", message[errorCode],
@@ -61,7 +66,7 @@ Widget::Widget(QWidget* parent) : QWidget(parent), ui(new Ui::Widget) {
                     }
                     QFile tarFile(QFileInfo(task.backupFilename).fileName() + ".tar");
                     tarFile.remove();
-                    QDir::setCurrent(currentDirectory.path());
+                    //QDir::setCurrent(currentDirectory.path());
                     // 云上传
                     if (task.cloud) {
                         QNetworkAccessManager* manager = new QNetworkAccessManager(this);
@@ -254,20 +259,27 @@ void Widget::on_startBackupButton_clicked() {
         }
     }
     // 调用打包压缩加密
-    QProcess tar;
+    /*QProcess tar;*/
     QStringList files;
     for (int i = 0; i < ui->backupFileList->topLevelItemCount(); ++i) {
-        files.append("./" + ui->backupFileList->topLevelItem(i)->text(0));
+        files.append(ui->backupFileList->topLevelItem(i)->text(1));
     }
-    auto currentDirectory = QDir::current();
+    /*auto currentDirectory = QDir::current();
     QDir::setCurrent(rootDirectory);
     tar.start(currentDirectory.path() + "/tar.exe", QStringList() << "-cvf" << ui->backupFilenameLineEdit->text() + ".tar" << files);
     tar.waitForStarted(-1);
-    tar.waitForFinished(-1);
+    tar.waitForFinished(-1);*/
+    int errorCode = Pack::pack(files, ui->backupFilenameLineEdit->text() + ".tar");
+    if (errorCode) {
+        QStringList message = {"正常执行", "目标文件打开失败", "打开源文件失败"};
+        QMessageBox::information(this, "提示", message[errorCode],
+                                 QMessageBox::Yes, QMessageBox::Yes);
+        return;
+    }
     Compressor compressor;
-    int errorCode = compressor.compress(ui->backupFilenameLineEdit->text().toStdString() + ".tar",
-                                        ui->backupFileDirectoryLineEdit->text().toStdString() + "/",
-                                        ui->passwordCheckBox->isChecked() ? ui->passwordLineEdit->text().toStdString() : "");
+    errorCode = compressor.compress(ui->backupFilenameLineEdit->text().toStdString() + ".tar",
+                                    ui->backupFileDirectoryLineEdit->text().toStdString() + "/",
+                                    ui->passwordCheckBox->isChecked() ? ui->passwordLineEdit->text().toStdString() : "");
     if (errorCode) {
         QStringList message = {"正常执行", "源文件扩展名不是bak", "打开源文件失败", "打开目标文件失败"};
         QMessageBox::information(this, "提示", message[errorCode],
@@ -277,7 +289,7 @@ void Widget::on_startBackupButton_clicked() {
     }
     QFile tarFile(ui->backupFilenameLineEdit->text() + ".tar");
     tarFile.remove();
-    QDir::setCurrent(currentDirectory.path());
+    //QDir::setCurrent(currentDirectory.path());
     // 云上传
     if (ui->cloudCheckBox->isChecked()) {
         QNetworkAccessManager* manager = new QNetworkAccessManager(this);
@@ -414,17 +426,26 @@ void Widget::on_taskList_customContextMenuRequested(const QPoint& pos) {
                 dir.rmdir("./TEMP");
                 return;
             }
-            QProcess tar;
+            /*QProcess tar;
             auto currentDirectory = QDir::current();
-            QDir::setCurrent("./TEMP");
-            QString tempFilename = QFileInfo(currentItem->text(5)).fileName();
+            QDir::setCurrent("./TEMP");*/
+            QString tempFilename = "./TEMP/" + QFileInfo(currentItem->text(5)).fileName();
             tempFilename = tempFilename.left(tempFilename.length() - 3) + "tar";
-            tar.start(currentDirectory.path() + "/tar.exe", QStringList() << "-xvf" << tempFilename);
+            qDebug() << tempFilename;
+            errorCode = Unpack::unpack(QFileInfo(tempFilename).absoluteFilePath(), "./TEMP");
+            if (errorCode) {
+                QStringList message = {"正常执行",  "打开源文件失败", "目标文件打开失败", "创建目录失败"};
+                QMessageBox::information(this, "提示", message[errorCode],
+                                         QMessageBox::Yes, QMessageBox::Yes);
+                return;
+            }
+            /*tar.start(currentDirectory.path() + "/tar.exe", QStringList() << "-xvf" << tempFilename);
             tar.waitForStarted(-1);
-            tar.waitForFinished(-1);
+            tar.waitForFinished(-1);*/
             QFile tarFile(tempFilename);
             tarFile.remove();
-            QDir::setCurrent(currentDirectory.path());
+            /*QDir::setCurrent(currentDirectory.path());*/
+            qDebug() << "!!!";
             auto difference = Check::check(taskManager.getTaskList()[index].files, "./TEMP");
             if (difference.empty()) {
                 QMessageBox::information(this, "提示", "备份无差异",
@@ -496,16 +517,23 @@ void Widget::on_startRestoreButton_clicked() {
                 return;
             }
             cloudFile.remove();
-            QProcess tar;
-            auto currentDirectory = QDir::current();
-            QDir::setCurrent(ui->backupFileRestoreDirectoryLineEdit->text());
-            QString tempFilename = "temp_" + ui->cloudFileRestoreLineEdit->text().left(ui->cloudFileRestoreLineEdit->text().length() - 3) + "tar";
-            tar.start(currentDirectory.path() + "/tar.exe", QStringList() << "-xvf" << tempFilename);
+            /*QProcess tar;
+            auto currentDirectory = QDir::current();*/
+            //QDir::setCurrent(ui->backupFileRestoreDirectoryLineEdit->text());
+            QString tempFilename = ui->backupFileRestoreDirectoryLineEdit->text() + "/" + "temp_" + ui->cloudFileRestoreLineEdit->text().left(ui->cloudFileRestoreLineEdit->text().length() - 3) + "tar";
+            /*tar.start(currentDirectory.path() + "/tar.exe", QStringList() << "-xvf" << tempFilename);
             tar.waitForStarted(-1);
-            tar.waitForFinished(-1);
+            tar.waitForFinished(-1);*/
+            errorCode = Unpack::unpack(tempFilename, ui->backupFileRestoreDirectoryLineEdit->text());
+            if (errorCode) {
+                QStringList message = {"正常执行",  "打开源文件失败", "目标文件打开失败", "创建目录失败"};
+                QMessageBox::information(this, "提示", message[errorCode],
+                                         QMessageBox::Yes, QMessageBox::Yes);
+                return;
+            }
             QFile tarFile(tempFilename);
             tarFile.remove();
-            QDir::setCurrent(currentDirectory.path());
+            /*QDir::setCurrent(currentDirectory.path());*/
             QMessageBox::information(this, "提示", "恢复完成。",
                                      QMessageBox::Yes, QMessageBox::Yes);
             QDesktopServices::openUrl(QUrl("file:///" + ui->backupFileRestoreDirectoryLineEdit->text(), QUrl::TolerantMode));
@@ -530,17 +558,24 @@ void Widget::on_startRestoreButton_clicked() {
                                      QMessageBox::Yes, QMessageBox::Yes);
             return;
         }
-        QProcess tar;
+        /*QProcess tar;
         auto currentDirectory = QDir::current();
-        QDir::setCurrent(ui->backupFileRestoreDirectoryLineEdit->text());
-        QString tempFilename = QFileInfo(ui->localFileRestoreLineEdit->text()).fileName();
+        QDir::setCurrent(ui->backupFileRestoreDirectoryLineEdit->text());*/
+        QString tempFilename = ui->backupFileRestoreDirectoryLineEdit->text() + "/" + QFileInfo(ui->localFileRestoreLineEdit->text()).fileName();
         tempFilename = tempFilename.left(tempFilename.length() - 3) + "tar";
-        tar.start(currentDirectory.path() + "/tar.exe", QStringList() << "-xvf" << tempFilename);
+        /*tar.start(currentDirectory.path() + "/tar.exe", QStringList() << "-xvf" << tempFilename);
         tar.waitForStarted(-1);
-        tar.waitForFinished(-1);
+        tar.waitForFinished(-1);*/
+        errorCode = Unpack::unpack(tempFilename, ui->backupFileRestoreDirectoryLineEdit->text());
+        if (errorCode) {
+            QStringList message = {"正常执行",  "打开源文件失败", "目标文件打开失败", "创建目录失败"};
+            QMessageBox::information(this, "提示", message[errorCode],
+                                     QMessageBox::Yes, QMessageBox::Yes);
+            return;
+        }
         QFile tarFile(tempFilename);
         tarFile.remove();
-        QDir::setCurrent(currentDirectory.path());
+        /*QDir::setCurrent(currentDirectory.path());*/
         QMessageBox::information(this, "提示", "恢复完成。",
                                  QMessageBox::Yes, QMessageBox::Yes);
         QDesktopServices::openUrl(QUrl("file:///" + ui->backupFileRestoreDirectoryLineEdit->text(), QUrl::TolerantMode));
