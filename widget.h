@@ -13,6 +13,8 @@
 #include "compressor.h"
 #include "decompressor.h"
 #include "check.h"
+#include "pack.h"
+#include "unpack.h"
 
 const QString api = "http://119.28.65.16:5000/";
 

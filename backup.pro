@@ -37,7 +37,9 @@ HEADERS += \
     compressor.h \
     decompressor.h \
     md5.h \
-    check.h
+    check.h \
+    pack.h \
+    unpack.h
 
 msvc {
     QMAKE_CFLAGS += /utf-8

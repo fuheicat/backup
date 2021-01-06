@@ -9,6 +9,8 @@
 #include <QProcess>
 
 Widget::Widget(QWidget* parent) : QWidget(parent), ui(new Ui::Widget) {
+    Pack::pack(QStringList({"D:/pascalout.txt", "D:/demo"}), "D:/998.tar");
+    Unpack::unpack("D:/998.tar", "E:/test");
     ui->setupUi(this);
     this->setFixedSize({768, 768});
     // 使 localGroupBox 可用而 cloudGroupBox不可用
