@@ -390,6 +390,7 @@ void Widget::on_clearTaskButton_clicked() {
 void Widget::on_taskList_customContextMenuRequested(const QPoint& pos) {
     QTreeWidgetItem* currentItem = ui->taskList->itemAt(pos);
     if (currentItem) {
+        int index = ui->taskList->indexOfTopLevelItem(currentItem);
         popMenu = new QMenu(this);
         openFolder = popMenu->addAction("打开备份文件所在目录");
         check = popMenu->addAction("与原文件校验");
@@ -397,7 +398,53 @@ void Widget::on_taskList_customContextMenuRequested(const QPoint& pos) {
             QDesktopServices::openUrl(QUrl("file:///" + QFileInfo(currentItem->text(5)).path(), QUrl::TolerantMode));
         });
         connect(check, &QAction::triggered, this, [ = ]() {
-
+            Decompressor decompressor;
+            QDir dir;
+            dir.mkdir("./TEMP");
+            QFileInfo TEMP("./TEMP");
+            int errorCode = decompressor.decompress(currentItem->text(5).toStdString(),
+                                                    TEMP.absoluteFilePath().toStdString() + "/",
+                                                    taskManager.getTaskList()[index].password.toStdString());
+            if (errorCode) {
+                QStringList message = {"正常执行", "源文件扩展名不是bak", "打开源文件失败", "打开目标文件失败", "文件过短，频率表不完整", "文件结尾不完整", "密码错误", "解码错误"};
+                QMessageBox::information(this, "提示", message[errorCode],
+                                         QMessageBox::Yes, QMessageBox::Yes);
+                dir.rmdir("./TEMP");
+                return;
+            }
+            QProcess tar;
+            auto currentDirectory = QDir::current();
+            QDir::setCurrent("./TEMP");
+            QString tempFilename = QFileInfo(currentItem->text(5)).fileName();
+            tempFilename = tempFilename.left(tempFilename.length() - 3) + "tar";
+            tar.start(currentDirectory.path() + "/tar.exe", QStringList() << "-xvf" << tempFilename);
+            tar.waitForStarted(-1);
+            tar.waitForFinished(-1);
+            QFile tarFile(tempFilename);
+            tarFile.remove();
+            QDir::setCurrent(currentDirectory.path());
+            auto difference = Check::check(taskManager.getTaskList()[index].files, "./TEMP");
+            if (difference.empty()) {
+                QMessageBox::information(this, "提示", "备份无差异",
+                                         QMessageBox::Yes, QMessageBox::Yes);
+            } else {
+                QMessageBox::information(this, "提示", "备份有差异",
+                                         QMessageBox::Yes, QMessageBox::Yes);
+                QFile diff("diff.txt");
+                diff.open(QFile::WriteOnly);
+                QStringList types = {"删除", "修改", "增加"};
+                for (auto& d : difference) {
+                    auto filename = d.first;
+                    auto type = d.second;
+                    diff.write(types[type].toStdString().c_str());
+                    diff.write(" ");
+                    diff.write(filename.toStdString().c_str());
+                    diff.write("\n");
+                }
+                diff.close();
+                QProcess notepad;
+                notepad.startDetached("notepad diff.txt");
+            }
         });
         popMenu->exec(QCursor::pos());
     }
